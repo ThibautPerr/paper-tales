@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.Resource.ResourceType;
+import com.example.effects.Effect;
+import com.example.effects.OnPhase3;
 
 public class Player {
     private int id;
@@ -15,6 +17,8 @@ public class Player {
     private List<Building> buildings;
 
     private List<Resource> resources;
+
+    private List<Effect> effects;
 
     private int warPoint;
 
@@ -30,20 +34,21 @@ public class Player {
         for (Resource.ResourceType type : Resource.ResourceType.values()) {
             this.resources.add(new Resource(type, 0));
         }
+        this.effects = new ArrayList<Effect>();
         this.warPoint = 0;
         this.point = 0;
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 
     public boolean isRealPlayer() {
-        return realPlayer;
+        return this.realPlayer;
     }
 
     public List<Card> getHand() {
-        return hand;
+        return this.hand;
     }
 
     public void setHand(List<Card> hand) {
@@ -51,11 +56,11 @@ public class Player {
     }
 
     public Board getBoard() {
-        return board;
+        return this.board;
     }
 
     public List<Building> getBuildings() {
-        return buildings;
+        return this.buildings;
     }
 
     public void setBuildings(List<Building> buildings) {
@@ -65,7 +70,7 @@ public class Player {
 
     public List<BuildingPhase> getBuildableBuildingPhases() {
         List<BuildingPhase> buildableBuildingPhases = new ArrayList<BuildingPhase>();
-        for (Building building : buildings) {
+        for (Building building : this.buildings) {
             BuildingPhase nextBuildingPhase = building.getNextBuildingPhase();
             if (nextBuildingPhase != null) {
                 buildableBuildingPhases.add(nextBuildingPhase);
@@ -78,7 +83,7 @@ public class Player {
         for (Resource resource : buildingPhase.getRequirements()) {
             if (resource.getType() != ResourceType.GOLD
                     && getResourceByType(resource.getType()).getQuantity() >= resource.getQuantity()) {
-                        return 0;
+                return 0;
             }
         }
 
@@ -119,11 +124,40 @@ public class Player {
     }
 
     public List<Resource> getResources() {
-        return resources;
+        return this.resources;
     }
 
     public void setResource(Resource.ResourceType resourceType, int quantity) {
         this.resources.get(resourceType.ordinal()).setQuantity(quantity);
+    }
+
+    public void addResource(Resource resource) {
+        Resource playerResource = getResourceByType(resource.getType());
+        playerResource.setQuantity(playerResource.getQuantity() + resource.getQuantity());
+    }
+
+    public void addResources(List<Resource> resources) {
+        for (Resource resource : resources) {
+            addResource(resource);
+        }
+    }
+
+    public void addResourcePerResource(Resource.ResourceType addType, int addQuantity, Resource.ResourceType perType,
+            int perQuantity) {
+        Resource playerResource = getResourceByType(addType);
+        int perResourceQuantity = getResourceByType(perType).getQuantity();
+        playerResource.setQuantity(playerResource.getQuantity() + (perResourceQuantity / perQuantity) * addQuantity);
+    }
+
+    public void removeResource(Resource resource) {
+        Resource playerResource = getResourceByType(resource.getType());
+        playerResource.setQuantity(playerResource.getQuantity() - resource.getQuantity());
+    }
+
+    public void removeResources(List<Resource> resources) {
+        for (Resource resource : resources) {
+            removeResource(resource);
+        }
     }
 
     public boolean hasEnoughResources(List<Resource> requirements) {
@@ -148,20 +182,74 @@ public class Player {
         return null;
     }
 
+    public List<Effect> getEffects() {
+        return this.effects;
+    }
+
+    public void addEffect(Effect effect) {
+        this.effects.add(effect);
+    }
+
+    public void onPhase3() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof com.example.effects.OnPhase3) {
+                OnPhase3 onPhase3Effect = (OnPhase3) effect;
+                String functionName = onPhase3Effect.getFunction();
+                switch (functionName) {
+                    case "addPoint":
+                        onPhase3Effect.addPoint(this);
+                        break;
+                    default:
+                        System.out.println("Function not found");
+                        break;
+                }
+            }
+        }
+    }
+
     public int getWarPoint() {
-        return warPoint;
+        return this.warPoint;
     }
 
     public void setWarPoint(int warPoint) {
         this.warPoint = warPoint;
     }
 
+    public void addWarPoint(int warPoint) {
+        this.warPoint += warPoint;
+    }
+
+    public void addWarPointPerResource(int warPoint, Resource.ResourceType type, int quantity) {
+        this.warPoint += warPoint * (getResourceByType(type).getQuantity() / quantity);
+    }
+
     public int getPoint() {
-        return point;
+        return this.point;
     }
 
     public void setPoint(int point) {
         this.point = point;
+    }
+
+    public void addPoint(int point) {
+        this.point += point;
+    }
+
+    public void addPointPerResource(int point, Resource.ResourceType type, int quantity) {
+        this.point += point * (getResourceByType(type).getQuantity() / quantity);
+    }
+
+    public void addPointPerUnitWithMinAttack(int point, int minAttack) {
+        for (Card card : this.board.getFrontCards()) {
+            if (card.getAttack() >= minAttack) {
+                this.point += point;
+            }
+        }
+        for (Card card : this.board.getBackCards()) {
+            if (card.getAttack() >= minAttack) {
+                this.point += point;
+            }
+        }
     }
 
     public Card getCardInHandById(int idCard) {
@@ -190,13 +278,13 @@ public class Player {
     }
 
     public void printPlayer() {
-        System.out.println("Player: " + id);
+        System.out.println("Player: " + this.id);
         System.out.println("Gold: " + getResourceByType(ResourceType.GOLD).getQuantity());
-        System.out.println("Point: " + point);
+        System.out.println("Point: " + this.point);
 
         System.out.println("Hand: ");
-        if (hand != null)
-            for (Card card : hand)
+        if (this.hand != null)
+            for (Card card : this.hand)
                 card.printCard();
         else
             System.out.println("Empty");
@@ -204,29 +292,29 @@ public class Player {
         System.out.println("Board: ");
 
         System.out.println("Front: ");
-        if (board.getFrontCards() != null)
-            for (Card card : board.getFrontCards())
+        if (this.board.getFrontCards() != null)
+            for (Card card : this.board.getFrontCards())
                 card.printCard();
         else
             System.out.println("Empty");
 
         System.out.println("Back: ");
-        if (board.getBackCards() != null)
+        if (this.board.getBackCards() != null)
             for (Card card : board.getBackCards())
                 card.printCard();
         else
             System.out.println("Empty");
 
         System.out.println("Buildings: ");
-        if (buildings != null)
-            for (Building building : buildings)
+        if (this.buildings != null)
+            for (Building building : this.buildings)
                 building.printBuilding();
         else
             System.out.println("Empty");
 
         System.out.println("Resources: ");
-        if (resources != null)
-            for (Resource resource : resources)
+        if (this.resources != null)
+            for (Resource resource : this.resources)
                 System.out.println(resource);
         else
             System.out.println("Empty");
@@ -244,14 +332,14 @@ public class Player {
 
     public void printBuildings() {
         System.out.print("Player " + this.id + " buildings: ");
-        for (Building building : buildings) {
+        for (Building building : this.buildings) {
             building.printBuilding();
         }
     }
 
     public void printBuiltBuildings() {
         System.out.print("Player " + this.id + " built buildings: ");
-        for (Building building : buildings) {
+        for (Building building : this.buildings) {
             if (building.getCurrentBuildingPhase() != 0)
                 System.out.print(building.getName() + "(" + building.getCurrentBuildingPhase() + "), ");
         }
