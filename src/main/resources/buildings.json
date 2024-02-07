@@ -1,0 +1,160 @@
+[
+    {
+        "id": 1,
+        "name": "Temple",
+        "buildingPhases": [
+            {
+                "phase": 1,
+                "requirements": [
+                    {
+                        "resourceType": "CRYSTAL",
+                        "quantity": 1
+                    }
+                ],
+                "optionnalRequirements": [
+                    {
+                        "resourceType": "GOLD",
+                        "quantity": 2
+                    }
+                ],
+                "point": 1
+            },
+            {
+                "phase": 2,
+                "requirements": [
+                    {
+                        "resourceType": "CRYSTAL",
+                        "quantity": 2
+                    }
+                ],
+                "optionnalRequirements": [
+                    {
+                        "resourceType": "GOLD",
+                        "quantity": 3
+                    }
+                ],
+                "point": 3
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "name": "Mine",
+        "buildingPhases": [
+            {
+                "phase": 1,
+                "requirements": [
+                    {
+                        "resourceType": "WOOD",
+                        "quantity": 1
+                    }
+                ],
+                "optionnalRequirements": null,
+                "point": 1
+            },
+            {
+                "phase": 2,
+                "requirements": [
+                    {
+                        "resourceType": "WOOD",
+                        "quantity": 2
+                    }
+                ],
+                "optionnalRequirements": null,
+                "point": 3
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "name": "Taverne",
+        "buildingPhases": [
+            {
+                "phase": 1,
+                "requirements": [
+                    {
+                        "resourceType": "MEAT",
+                        "quantity": 1
+                    }
+                ],
+                "optionnalRequirements": null,
+                "point": 1
+            },
+            {
+                "phase": 2,
+                "requirements": [
+                    {
+                        "resourceType": "MEAT",
+                        "quantity": 1
+                    },
+                    {
+                        "resourceType": "WOOD",
+                        "quantity": 1
+                    }
+                ],
+                "optionnalRequirements": null,
+                "point": 3
+            }
+        ]
+    },
+    {
+        "id": 4,
+        "name": "Caserne",
+        "buildingPhases": [
+            {
+                "phase": 1,
+                "requirements": [
+                    {
+                        "resourceType": "WOOD",
+                        "quantity": 1
+                    }
+                ],
+                "optionnalRequirements": null,
+                "point": 1
+            },
+            {
+                "phase": 2,
+                "requirements": [
+                    {
+                        "resourceType": "MEAT",
+                        "quantity": 1
+                    },
+                    {
+                        "resourceType": "WOOD",
+                        "quantity": 1
+                    }
+                ],
+                "optionnalRequirements": null,
+                "point": 3
+            }
+        ]
+    },
+    {
+        "id": 5,
+        "name": "Ville",
+        "buildingPhases": [
+            {
+                "phase": 1,
+                "requirements": [
+                    {
+                        "resourceType": "WOOD",
+                        "quantity": 1
+                    }
+                ],
+                "optionnalRequirements": null,
+                "point": 1
+            },
+            {
+                "phase": 2,
+                "requirements": [
+                    {
+                        "resourceType": "WOOD",
+                        "quantity": 2
+                    }
+                ],
+                "optionnalRequirements": null,
+                "point": 3
+            }
+        ]
+    }
+]
