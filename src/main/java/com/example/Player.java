@@ -6,6 +6,8 @@ import java.util.List;
 import com.example.Resource.ResourceType;
 import com.example.effects.Effect;
 import com.example.effects.OnPhase3;
+import com.example.effects.OnPhase4;
+import com.example.effects.OnPlayed;
 
 public class Player {
     private int id;
@@ -31,8 +33,8 @@ public class Player {
         this.board = new Board();
         this.buildings = new ArrayList<Building>();
         this.resources = new ArrayList<Resource>();
-        for (Resource.ResourceType type : Resource.ResourceType.values()) {
-            this.resources.add(new Resource(type, 0));
+        for (Resource.ResourceType resourceType : Resource.ResourceType.values()) {
+            this.resources.add(new Resource(resourceType, 0));
         }
         this.effects = new ArrayList<Effect>();
         this.warPoint = 0;
@@ -81,27 +83,27 @@ public class Player {
 
     public int builtWithGold(BuildingPhase buildingPhase) {
         for (Resource resource : buildingPhase.getRequirements()) {
-            if (resource.getType() != ResourceType.GOLD
-                    && getResourceByType(resource.getType()).getQuantity() >= resource.getQuantity()) {
+            if (resource.getResourceType() != ResourceType.GOLD
+                    && getResourceByResourceType(resource.getResourceType()).getQuantity() >= resource.getQuantity()) {
                 return 0;
             }
         }
 
         for (Resource resource : buildingPhase.getOptionnalRequirements()) {
-            if (resource.getType() != ResourceType.GOLD
-                    && getResourceByType(resource.getType()).getQuantity() >= resource.getQuantity()) {
+            if (resource.getResourceType() != ResourceType.GOLD
+                    && getResourceByResourceType(resource.getResourceType()).getQuantity() >= resource.getQuantity()) {
                 return 0;
             }
         }
 
         for (Resource resource : buildingPhase.getRequirements()) {
-            if (resource.getType() == ResourceType.GOLD) {
+            if (resource.getResourceType() == ResourceType.GOLD) {
                 return resource.getQuantity();
             }
         }
 
         for (Resource resource : buildingPhase.getOptionnalRequirements()) {
-            if (resource.getType() == ResourceType.GOLD) {
+            if (resource.getResourceType() == ResourceType.GOLD) {
                 return resource.getQuantity();
             }
         }
@@ -118,6 +120,11 @@ public class Player {
                                 this.resources.get(ResourceType.GOLD.ordinal()).getQuantity() - usedGold);
                     }
                     building.setCurrentBuildingPhase(newBuildingPhase.getPhase());
+                    if (newBuildingPhase.getEffect() instanceof OnPlayed) {
+                        OnPlayed onPlayedEffect = (OnPlayed) newBuildingPhase.getEffect();
+                        onPlayedEffect.playEffect(this);
+                    } else
+                        this.effects.add(newBuildingPhase.getEffect());
                 }
             }
         }
@@ -132,7 +139,7 @@ public class Player {
     }
 
     public void addResource(Resource resource) {
-        Resource playerResource = getResourceByType(resource.getType());
+        Resource playerResource = getResourceByResourceType(resource.getResourceType());
         playerResource.setQuantity(playerResource.getQuantity() + resource.getQuantity());
     }
 
@@ -142,15 +149,15 @@ public class Player {
         }
     }
 
-    public void addResourcePerResource(Resource.ResourceType addType, int addQuantity, Resource.ResourceType perType,
-            int perQuantity) {
-        Resource playerResource = getResourceByType(addType);
-        int perResourceQuantity = getResourceByType(perType).getQuantity();
-        playerResource.setQuantity(playerResource.getQuantity() + (perResourceQuantity / perQuantity) * addQuantity);
+    public void addResourcePerResource(Resource addResource, Resource perResource) {
+        Resource playerResource = getResourceByResourceType(addResource.getResourceType());
+        int perResourceQuantity = getResourceByResourceType(perResource.getResourceType()).getQuantity();
+        playerResource.setQuantity(playerResource.getQuantity()
+                + (perResourceQuantity / perResource.getQuantity()) * addResource.getQuantity());
     }
 
     public void removeResource(Resource resource) {
-        Resource playerResource = getResourceByType(resource.getType());
+        Resource playerResource = getResourceByResourceType(resource.getResourceType());
         playerResource.setQuantity(playerResource.getQuantity() - resource.getQuantity());
     }
 
@@ -165,7 +172,7 @@ public class Player {
             return false;
         for (Resource requirement : requirements) {
             int requiredQuantity = requirement.getQuantity();
-            Resource playerResource = getResourceByType(requirement.getType());
+            Resource playerResource = getResourceByResourceType(requirement.getResourceType());
 
             if (playerResource.getQuantity() < requiredQuantity)
                 return false;
@@ -173,9 +180,9 @@ public class Player {
         return true;
     }
 
-    public Resource getResourceByType(Resource.ResourceType type) {
+    public Resource getResourceByResourceType(Resource.ResourceType resourceType) {
         for (Resource resource : this.resources) {
-            if (resource.getType() == type) {
+            if (resource.getResourceType() == resourceType) {
                 return resource;
             }
         }
@@ -190,19 +197,20 @@ public class Player {
         this.effects.add(effect);
     }
 
-    public void onPhase3() {
+    public void playPhase3Effects() {
         for (Effect effect : this.effects) {
-            if (effect instanceof com.example.effects.OnPhase3) {
+            if (effect instanceof OnPhase3) {
                 OnPhase3 onPhase3Effect = (OnPhase3) effect;
-                String functionName = onPhase3Effect.getFunction();
-                switch (functionName) {
-                    case "addPoint":
-                        onPhase3Effect.addPoint(this);
-                        break;
-                    default:
-                        System.out.println("Function not found");
-                        break;
-                }
+                onPhase3Effect.playEffect(this);
+            }
+        }
+    }
+
+    public void playPhase4Effects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnPhase4) {
+                OnPhase4 onPhase4Effect = (OnPhase4) effect;
+                onPhase4Effect.playEffect(this);
             }
         }
     }
@@ -219,8 +227,9 @@ public class Player {
         this.warPoint += warPoint;
     }
 
-    public void addWarPointPerResource(int warPoint, Resource.ResourceType type, int quantity) {
-        this.warPoint += warPoint * (getResourceByType(type).getQuantity() / quantity);
+    public void addWarPointPerResource(int warPoint, Resource resource) {
+        this.warPoint += warPoint
+                * (getResourceByResourceType(resource.getResourceType()).getQuantity() / resource.getQuantity());
     }
 
     public int getPoint() {
@@ -235,8 +244,9 @@ public class Player {
         this.point += point;
     }
 
-    public void addPointPerResource(int point, Resource.ResourceType type, int quantity) {
-        this.point += point * (getResourceByType(type).getQuantity() / quantity);
+    public void addPointPerResource(int point, Resource resource) {
+        this.point += point
+                * (getResourceByResourceType(resource.getResourceType()).getQuantity() / resource.getQuantity());
     }
 
     public void addPointPerUnitWithMinAttack(int point, int minAttack) {
@@ -279,7 +289,7 @@ public class Player {
 
     public void printPlayer() {
         System.out.println("Player: " + this.id);
-        System.out.println("Gold: " + getResourceByType(ResourceType.GOLD).getQuantity());
+        System.out.println("Gold: " + getResourceByResourceType(ResourceType.GOLD).getQuantity());
         System.out.println("Point: " + this.point);
 
         System.out.println("Hand: ");

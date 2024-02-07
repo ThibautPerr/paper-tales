@@ -1,56 +1,62 @@
 package com.example.effects;
 
+import java.util.List;
+
 import com.example.Player;
 import com.example.Resource;
 
 public abstract class Effect {
     private String function;
 
-    Effect(String function) {
+    protected Effect(String function) {
         this.function = function;
     }
 
-    public String getFunction() {
+    protected String getFunction() {
         return this.function;
     }
 
-    void addResource(Player player, Resource resource) {
+    protected void addResource(Player player, Resource resource) {
         player.addResource(resource);
     }
 
-    void addResources(Player player, Resource[] resources) {
+    protected void addResources(Player player, List<Resource> resources) {
         for (Resource resource : resources) {
             player.addResource(resource);
         }
     }
 
-    void addResourcePerResource(Player player, Resource.ResourceType addType, int addQuantity, Resource.ResourceType perType, int perQuantity) {
-        player.addResourcePerResource(addType, addQuantity, perType, perQuantity);
+    protected void addResourcePerResource(Player player, Resource addResource, Resource perResource) {
+        player.addResourcePerResource(addResource, perResource);
     }
 
-    void removeResource(Player player, Resource resource) {
+    protected void removeResource(Player player, Resource resource) {
         player.removeResource(resource);
     }
 
-    void removeResources(Player player, Resource[] resources) {
+    protected void removeResources(Player player, List<Resource> resources) {
         for (Resource resource : resources) {
             player.removeResource(resource);
         }
     }
 
-    void addPoint(Player player, int point) {
+    protected void addPoint(Player player, int point) {
         player.addPoint(point);
     }
 
-    void addPointPerResource(Player player, int point, Resource.ResourceType type, int quantity) {
-        player.addPointPerResource(point, type, quantity);
+    protected void addPointPerResource(Player player, int point, Resource resource) {
+        player.addPointPerResource(point, resource);
     }
 
-    void addPointPerUnitWithMinAttack(Player player, int point, int minAttack) {
+    protected void addPointPerUnitWithMinAttack(Player player, int point, int minAttack) {
         player.addPointPerUnitWithMinAttack(point, minAttack);
     }
 
-    void addWarPointPerResource(Player player, int point, Resource.ResourceType type, int quantity) {
-        player.addWarPointPerResource(point, type, quantity);
+    protected void addWarPointPerResource(Player player, int point, Resource resource) {
+        player.addWarPointPerResource(point, resource);
     }
+
+    protected abstract void playEffect(Player player);
+
+    public abstract void printEffect();
 }

@@ -5,16 +5,16 @@ public class Resource {
         WOOD, MEAT, CRYSTAL, GOLD
     };
 
-    private ResourceType type;
+    private ResourceType resourceType;
     private int quantity;
 
-    public Resource(ResourceType type, int quantity) {
-        this.type = type;
+    public Resource(ResourceType resourceType, int quantity) {
+        this.resourceType = resourceType;
         this.quantity = quantity;
     }
 
-    public ResourceType getType() {
-        return type;
+    public ResourceType getResourceType() {
+        return resourceType;
     }
 
     public int getQuantity() {
@@ -26,6 +26,6 @@ public class Resource {
     }
 
     public void printResource() {
-        System.out.print("Resource: " + type + ", quantity: " + quantity);
+        System.out.print("Resource: " + resourceType + ", quantity: " + quantity);
     }
 }

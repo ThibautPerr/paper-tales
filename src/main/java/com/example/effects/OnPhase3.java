@@ -5,27 +5,25 @@ import com.example.Resource;
 
 public class OnPhase3 extends Effect {
     private int point;
-    private Resource.ResourceType type;
-    private int quantity;
+    private Resource resource;
     private int minAttack;
 
-    OnPhase3(String function) {
+    public OnPhase3(String function) {
         super(function);
     }
 
-    OnPhase3(String function, int point) {
-        super(function);
-        this.point = point;
-    }
-
-    OnPhase3(String function, int point, Resource.ResourceType type, int quantity) {
+    public OnPhase3(String function, int point) {
         super(function);
         this.point = point;
-        this.type = type;
-        this.quantity = quantity;
     }
 
-    OnPhase3(String function, int point, int minAttack) {
+    public OnPhase3(String function, int point, Resource resource) {
+        super(function);
+        this.point = point;
+        this.resource = resource;
+    }
+
+    public OnPhase3(String function, int point, int minAttack) {
         super(function);
         this.point = point;
         this.minAttack = minAttack;
@@ -43,15 +41,47 @@ public class OnPhase3 extends Effect {
         super.addPoint(player, this.point);
     }
 
-    void addPointPerResource(Player player) {
-        super.addPointPerResource(player, this.point, this.type, this.quantity);
+    public void addPointPerResource(Player player) {
+        super.addPointPerResource(player, this.point, this.resource);
     }
 
-    void addWarPointPerResource(Player player) {
-        super.addWarPointPerResource(player, this.point, this.type, this.quantity);
-    }
-
-    void addPointPerUnitWithMinAttack(Player player) {
+    public void addPointPerUnitWithMinAttack(Player player) {
         super.addPointPerUnitWithMinAttack(player, this.point, this.minAttack);
+    }
+
+    public void addWarPointPerResource(Player player) {
+        super.addWarPointPerResource(player, this.point, this.resource);
+    }
+
+    @Override
+    public void playEffect(Player player) {
+        switch (this.getFunction()) {
+            case "addPoint":
+                addPoint(player);
+                break;
+            case "addPointPerResource":
+                addPointPerResource(player);
+                break;
+            case "addWarPointPerResource":
+                addWarPointPerResource(player);
+                break;
+            case "addPointPerUnitWithMinAttack":
+                addPointPerUnitWithMinAttack(player);
+                break;
+            default:
+                System.out.println("OnPhase3 playEffect : unknown function " + this.getFunction());
+                break;
+        }
+    }
+
+    @Override
+    public void printEffect() {
+        System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
+        if (this.point != 0)
+            System.out.println("Point: " + this.point);
+        if (this.resource != null)
+            this.resource.printResource();
+        if (this.minAttack != 0)
+            System.out.println("MinAttack: " + this.minAttack);
     }
 }

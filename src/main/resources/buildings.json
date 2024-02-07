@@ -17,6 +17,14 @@
                         "quantity": 2
                     }
                 ],
+                "effect": {
+                    "type": "OnPhase4",
+                    "function": "addResource",
+                    "resource": {
+                        "resourceType": "GOLD",
+                        "quantity": 2
+                    }
+                },
                 "point": 1
             },
             {
@@ -33,6 +41,11 @@
                         "quantity": 3
                     }
                 ],
+                "effect": {
+                    "type": "OnPhase3",
+                    "function": "addPoint",
+                    "point": 2
+                },
                 "point": 3
             }
         ]
@@ -50,6 +63,14 @@
                     }
                 ],
                 "optionnalRequirements": null,
+                "effect": {
+                    "type": "OnPlayed",
+                    "function": "addResource",
+                    "resource": {
+                        "resourceType": "CRYSTAL",
+                        "quantity": 1
+                    }
+                },
                 "point": 1
             },
             {
@@ -61,6 +82,15 @@
                     }
                 ],
                 "optionnalRequirements": null,
+                "effect": {
+                    "type": "OnPhase3",
+                    "function": "addPointPerResource",
+                    "point": 2,
+                    "resource": {
+                        "resourceType": "CRYSTAL",
+                        "quantity": 1
+                    }
+                },
                 "point": 3
             }
         ]
@@ -78,6 +108,18 @@
                     }
                 ],
                 "optionnalRequirements": null,
+                "effect": {
+                    "type": "OnPhase4",
+                    "function": "addResourcePerResource",
+                    "addResource": {
+                        "resourceType": "GOLD",
+                        "quantity": 1
+                    },
+                    "perResource": {
+                        "resourceType": "MEAT",
+                        "quantity": 1
+                    }
+                },
                 "point": 1
             },
             {
@@ -93,6 +135,15 @@
                     }
                 ],
                 "optionnalRequirements": null,
+                "effect": {
+                    "type": "OnPhase3",
+                    "function": "addPointPerResource",
+                    "point": 1,
+                    "resource": {
+                        "resourceType": "MEAT",
+                        "quantity": 1
+                    }
+                },
                 "point": 3
             }
         ]
@@ -110,6 +161,15 @@
                     }
                 ],
                 "optionnalRequirements": null,
+                "effect": {
+                    "type": "OnPhase3",
+                    "function": "addWarPointPerResource",
+                    "point": 1,
+                    "resource": {
+                        "resourceType": "WOOD",
+                        "quantity": 1
+                    }
+                },
                 "point": 1
             },
             {
@@ -125,6 +185,12 @@
                     }
                 ],
                 "optionnalRequirements": null,
+                "effect": {
+                    "type": "OnPhase3",
+                    "function": "addPointPerUnitWithMinAttack",
+                    "point": 1,
+                    "minAttack": 3
+                },
                 "point": 3
             }
         ]
@@ -142,6 +208,20 @@
                     }
                 ],
                 "optionnalRequirements": null,
+                "effect": {
+                    "type": "OnPlayed",
+                    "function": "addResources",
+                    "resources": [
+                        {
+                            "resourceType": "WOOD",
+                            "quantity": 1
+                        },
+                        {
+                            "resourceType": "MEAT",
+                            "quantity": 1
+                        }
+                    ]
+                },
                 "point": 1
             },
             {
@@ -153,6 +233,14 @@
                     }
                 ],
                 "optionnalRequirements": null,
+                "effect": {
+                    "type": "OnPlayed",
+                    "function": "addResource",
+                    "resource": {
+                        "resourceType": "CRYSTAL",
+                        "quantity": 1
+                    }
+                },
                 "point": 3
             }
         ]

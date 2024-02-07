@@ -2,17 +2,20 @@ package com.example;
 
 import java.util.List;
 
+import com.example.effects.Effect;
+
 public class BuildingPhase {
     private int phase;
     private List<Resource> requirements;
     private List<Resource> optionnalRequirements;
-    // private Effect bonus;
+    private Effect effect;
     private int point;
 
-    public BuildingPhase(int phase, List<Resource> requirements, List<Resource> optionnalRequirements, int point) {
+    public BuildingPhase(int phase, List<Resource> requirements, List<Resource> optionnalRequirements, Effect effect, int point) {
         this.phase = phase;
         this.requirements = requirements;
         this.optionnalRequirements = optionnalRequirements;
+        this.effect = effect;
         this.point = point;
     }
 
@@ -26,6 +29,10 @@ public class BuildingPhase {
 
     public List<Resource> getOptionnalRequirements() {
         return optionnalRequirements;
+    }
+
+    public Effect getEffect() {
+        return effect;
     }
 
     public int getPoint() {
@@ -45,6 +52,7 @@ public class BuildingPhase {
                 resource.printResource();
         else
             System.out.print("null");
+        effect.printEffect();
         System.out.println("\nPoint: " + point);
     }
 }
