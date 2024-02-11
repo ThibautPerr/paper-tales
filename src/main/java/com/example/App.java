@@ -1,7 +1,6 @@
 package com.example;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.example.Resource.ResourceType;
@@ -10,8 +9,8 @@ import com.example.utils.Utils;
 public class App {
     public static void main(String[] args) {
         // Setup the game
-        List<Card> deck = Utils.createCards();
-        Collections.shuffle(deck);
+        Deck deck = new Deck(Utils.createCards());
+        deck.shuffle();
         List<Card> discardPile = new ArrayList<Card>();
         boolean[] realPlayers = { true, false, false, false };
         List<Player> players = Utils.createPlayers(4, realPlayers);
@@ -20,13 +19,6 @@ public class App {
             player.setBuildings(buildings);
             player.setResource(ResourceType.GOLD, 3);
         }
-
-        // set resources
-        players.get(0).setResource(ResourceType.WOOD, 1);
-        players.get(1).setResource(ResourceType.MEAT, 1);
-        players.get(2).setResource(ResourceType.CRYSTAL, 2);
-        players.get(3).setResource(ResourceType.WOOD, 2);
-        players.get(3).setResource(ResourceType.MEAT, 1);
 
         // There are 4 turns played
         for (int i = 0; i < 4; i++) {
@@ -42,7 +34,7 @@ public class App {
             // Cards are revealed
 
             // Each player can only keep one card in hand
-            Utils.phase2(players, discardPile);
+            Utils.phase2(players, deck, discardPile);
 
             // Phase 3 : For each player, if he has more attack than his neighbour, he gains
             // 3 points
@@ -58,16 +50,14 @@ public class App {
             // Phase 6 : Each units with a moon counter dies
             // Then each units gains a moon counter
             Utils.phase6(players, discardPile);
-
         }
 
         // Trigger end game effects
-
         // Add buildings points to the players points
 
         // The player with the most points wins
         // If there is a tie, the player with the most gold wins
         // If there is still a tie, the players share the victory
-
+        Utils.endGame(players);
     }
 }

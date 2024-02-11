@@ -24,29 +24,38 @@ public class Building {
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public int getCurrentBuildingPhase() {
-        return currentBuildingPhase;
+        return this.currentBuildingPhase;
     }
 
     public void setCurrentBuildingPhase(int currentBuildingPhase) {
         this.currentBuildingPhase = currentBuildingPhase;
     }
 
+    public BuildingPhase getBuildingPhase(int phase) {
+        for (BuildingPhase buildingPhase : this.buildingPhases) {
+            if (buildingPhase.getPhase() == phase) {
+                return buildingPhase;
+            }
+        }
+        return null;
+    }
+
     public List<BuildingPhase> getBuildingPhases() {
-        return buildingPhases;
+        return this.buildingPhases;
     }
 
     public BuildingPhase getNextBuildingPhase() {
-        if (currentBuildingPhase < buildingPhases.size()) {
-            for (BuildingPhase buildingPhase : buildingPhases) {
-                if (buildingPhase.getPhase() == currentBuildingPhase + 1) {
+        if (this.currentBuildingPhase < this.buildingPhases.size()) {
+            for (BuildingPhase buildingPhase : this.buildingPhases) {
+                if (buildingPhase.getPhase() == this.currentBuildingPhase + 1) {
                     return buildingPhase;
                 }
             }
@@ -55,9 +64,9 @@ public class Building {
     }
 
     public void printBuilding() {
-        System.out.println("Building: " + name + " (id: " + id + ")");
-        System.out.println("Current building phase: " + currentBuildingPhase);
-        for (BuildingPhase buildingPhase : buildingPhases) {
+        System.out.println("Building: " + this.name + " (id: " + id + ")");
+        System.out.println("Current building phase: " + this.currentBuildingPhase);
+        for (BuildingPhase buildingPhase : this.buildingPhases) {
             buildingPhase.printBuildingPhase();
         }
         System.out.println();

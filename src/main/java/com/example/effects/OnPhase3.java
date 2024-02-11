@@ -7,50 +7,81 @@ public class OnPhase3 extends Effect {
     private int point;
     private Resource resource;
     private int minAttack;
+    private int moon;
 
-    public OnPhase3(String function) {
-        super(function);
+    public OnPhase3(String function, int idCard) {
+        super(function, idCard);
     }
 
-    public OnPhase3(String function, int point) {
-        super(function);
+    public OnPhase3(String function, int idCard, int point) {
+        super(function, idCard);
         this.point = point;
     }
 
-    public OnPhase3(String function, int point, Resource resource) {
-        super(function);
+    public OnPhase3(String function, int idCard, int point, Resource resource) {
+        super(function, idCard);
         this.point = point;
         this.resource = resource;
     }
 
-    public OnPhase3(String function, int point, int minAttack) {
-        super(function);
+    public OnPhase3(String function, int idCard, int point, int minAttack) {
+        super(function, idCard);
         this.point = point;
         this.minAttack = minAttack;
+    }
+
+    public OnPhase3(int idCard, int point, int moon, String function) {
+        super(function, idCard);
+        this.point = point;
+        this.moon = moon;
+    }
+
+    public OnPhase3(OnPhase3 effect) {
+        super(effect.getFunction(), effect.getIdCard());
+        this.point = effect.point;
+        this.resource = effect.resource;
+        this.minAttack = effect.minAttack;
+        this.moon = effect.moon;
     }
 
     public String getFunction() {
         return super.getFunction();
     }
 
-    public int getPoint() {
-        return this.point;
-    }
-
-    public void addPoint(Player player) {
+    private void addPoint(Player player) {
         super.addPoint(player, this.point);
     }
 
-    public void addPointPerResource(Player player) {
+    private void addPointPerResource(Player player) {
         super.addPointPerResource(player, this.point, this.resource);
     }
 
-    public void addPointPerUnitWithMinAttack(Player player) {
+    private void addPointPerUnitWithMinAttack(Player player) {
         super.addPointPerUnitWithMinAttack(player, this.point, this.minAttack);
     }
 
-    public void addWarPointPerResource(Player player) {
-        super.addWarPointPerResource(player, this.point, this.resource);
+    private void addWarpointPerMoon(Player player) {
+        super.addWarpointPerMoon(player, this.getIdCard(), this.point, this.moon);
+    }
+
+    private void addWarpointPerAtLeastMoon(Player player) {
+        super.addWarpointPerAtLeastMoon(player, this.getIdCard(), this.point, this.moon);
+    }
+
+    private void addWarpointPerResource(Player player) {
+        super.addWarpointPerResource(player, this.getIdCard(), this.point, this.resource);
+    }
+
+    private void addWarpointPerGoldAddedAtNextPhase4(Player player) {
+        super.addWarpointPerGoldAddedAtNextPhase4(player, this.getIdCard(), this.point, this.resource);
+    }
+
+    private void addWarpointPerAtLeastResource(Player player) {
+        super.addWarpointPerAtLeastResource(player, this.getIdCard(), this.point, this.resource);
+    }
+
+    private void canFightFromBehind(Player player) {
+        super.canFightFromBehind(player, getIdCard());
     }
 
     @Override
@@ -62,11 +93,26 @@ public class OnPhase3 extends Effect {
             case "addPointPerResource":
                 addPointPerResource(player);
                 break;
-            case "addWarPointPerResource":
-                addWarPointPerResource(player);
+            case "addWarpointPerMoon":
+                addWarpointPerMoon(player);
+                break;
+            case "addWarpointPerAtLeastMoon":
+                addWarpointPerAtLeastMoon(player);
+                break;
+            case "addWarpointPerResource":
+                addWarpointPerResource(player);
+                break;
+            case "addWarpointPerGoldAddedAtNextPhase4":
+                addWarpointPerGoldAddedAtNextPhase4(player);
+                break;
+            case "addWarpointPerAtLeastResource":
+                addWarpointPerAtLeastResource(player);
                 break;
             case "addPointPerUnitWithMinAttack":
                 addPointPerUnitWithMinAttack(player);
+                break;
+            case "canFightFromBehind":
+                canFightFromBehind(player);
                 break;
             default:
                 System.out.println("OnPhase3 playEffect : unknown function " + this.getFunction());
@@ -83,5 +129,12 @@ public class OnPhase3 extends Effect {
             this.resource.printResource();
         if (this.minAttack != 0)
             System.out.println("MinAttack: " + this.minAttack);
+        if (this.moon != 0)
+            System.out.println("Moon: " + this.moon);
+    }
+
+    @Override
+    public OnPhase3 deepCopy() {
+        return new OnPhase3(this);
     }
 }

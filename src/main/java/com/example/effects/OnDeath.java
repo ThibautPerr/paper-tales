@@ -1,38 +1,47 @@
 package com.example.effects;
 
-import java.util.List;
-
 import com.example.Player;
 import com.example.Resource;
 
 public class OnDeath extends Effect {
+    private int moon;
     private Resource resource;
-    private List<Resource> resources;
 
-    OnDeath(String function) {
-        super(function);
+    public OnDeath(String function, int idCard) {
+        super(function, idCard);
     }
 
-    OnDeath(String function, Resource resource) {
-        super(function);
+    public OnDeath(String function, int idCard, Resource resource) {
+        super(function, idCard);
         this.resource = resource;
     }
 
-    OnDeath(String function, List<Resource> resources) {
-        super(function);
-        this.resources = resources;
+    public OnDeath(String function, int idCard, int moon, Resource resource) {
+        super(function, idCard);
+        this.moon = moon;
+        this.resource = resource;
+    }
+
+    public OnDeath(OnDeath effect) {
+        super(effect.getFunction(), effect.getIdCard());
+        this.moon = effect.moon;
+        this.resource = effect.resource;
     }
 
     public String getFunction() {
         return super.getFunction();
     }
 
-    void removeResource(Player player) {
+    private void removeResource(Player player) {
         super.removeResource(player, this.resource);
     }
 
-    void removeResources(Player player) {
-        super.removeResources(player, this.resources);
+    public void removeResourcePerMoon(Player player) {
+        super.removeResourcePerMoon(player, this.getIdCard(), this.resource, this.moon);
+    }
+
+    private void removeResourcePerAtLeastMoon(Player player) {
+        super.removeResourcePerAtLeastMoon(player, this.getIdCard(), this.resource, this.moon);
     }
 
     @Override
@@ -41,8 +50,11 @@ public class OnDeath extends Effect {
             case "removeResource":
                 removeResource(player);
                 break;
-            case "removeResources":
-                removeResources(player);
+            case "removeResourcePerMoon":
+                removeResourcePerMoon(player);
+                break;
+            case "removeResourcePerAtLeastMoon":
+                removeResourcePerAtLeastMoon(player);
                 break;
             default:
                 System.out.println("Error: function " + this.getFunction() + " not found");
@@ -55,8 +67,12 @@ public class OnDeath extends Effect {
         System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
         if (this.resource != null)
             this.resource.printResource();
-        if (this.resources != null)
-            for (Resource resource : this.resources)
-                resource.printResource();
+        if (this.moon != 0)
+            System.out.println("Moon: " + this.moon);
+    }
+
+    @Override
+    public OnDeath deepCopy() {
+        return new OnDeath(this);
     }
 }

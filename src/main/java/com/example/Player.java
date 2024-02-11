@@ -1,13 +1,23 @@
 package com.example;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.example.Resource.ResourceType;
 import com.example.effects.Effect;
+import com.example.effects.OnDeath;
+import com.example.effects.OnEndGame;
+import com.example.effects.OnEndPhase3;
+import com.example.effects.OnFlip;
+import com.example.effects.OnPhase2;
 import com.example.effects.OnPhase3;
 import com.example.effects.OnPhase4;
-import com.example.effects.OnPlayed;
+import com.example.effects.OnPhase5;
+import com.example.effects.OnPhase6;
+import com.example.effects.OnPhase6Death;
+import com.example.effects.OnUpdate;
 
 public class Player {
     private int id;
@@ -16,12 +26,15 @@ public class Player {
     private List<Card> hand;
     private Board board;
 
+    private boolean ignoreBuildingCost;
     private List<Building> buildings;
 
+    private int goldToAddInPhase4;
     private List<Resource> resources;
 
     private List<Effect> effects;
 
+    private int warWon;
     private int warPoint;
 
     private int point;
@@ -31,12 +44,15 @@ public class Player {
         this.realPlayer = realPlayer;
         this.hand = new ArrayList<Card>();
         this.board = new Board();
+        this.ignoreBuildingCost = false;
         this.buildings = new ArrayList<Building>();
+        this.goldToAddInPhase4 = 2;
         this.resources = new ArrayList<Resource>();
         for (Resource.ResourceType resourceType : Resource.ResourceType.values()) {
             this.resources.add(new Resource(resourceType, 0));
         }
         this.effects = new ArrayList<Effect>();
+        this.warWon = 0;
         this.warPoint = 0;
         this.point = 0;
     }
@@ -61,6 +77,14 @@ public class Player {
         return this.board;
     }
 
+    public boolean isIgnoreBuildingCost() {
+        return this.ignoreBuildingCost;
+    }
+
+    public void setIgnoreBuildingCost(boolean ignoreBuildingCost) {
+        this.ignoreBuildingCost = ignoreBuildingCost;
+    }
+
     public List<Building> getBuildings() {
         return this.buildings;
     }
@@ -78,10 +102,13 @@ public class Player {
                 buildableBuildingPhases.add(nextBuildingPhase);
             }
         }
+        Collections.shuffle(buildableBuildingPhases);
         return buildableBuildingPhases;
     }
 
     public int builtWithGold(BuildingPhase buildingPhase) {
+        if (this.ignoreBuildingCost)
+            return 0;
         for (Resource resource : buildingPhase.getRequirements()) {
             if (resource.getResourceType() != ResourceType.GOLD
                     && getResourceByResourceType(resource.getResourceType()).getQuantity() >= resource.getQuantity()) {
@@ -120,14 +147,26 @@ public class Player {
                                 this.resources.get(ResourceType.GOLD.ordinal()).getQuantity() - usedGold);
                     }
                     building.setCurrentBuildingPhase(newBuildingPhase.getPhase());
-                    if (newBuildingPhase.getEffect() instanceof OnPlayed) {
-                        OnPlayed onPlayedEffect = (OnPlayed) newBuildingPhase.getEffect();
-                        onPlayedEffect.playEffect(this);
-                    } else
-                        this.effects.add(newBuildingPhase.getEffect());
+                    if (newBuildingPhase.getPhase() == 2 && this.board.getMaxFrontCards() == 2) {
+                        this.board.setMaxFrontCards(3);
+                    }
+                    for (Effect effect : newBuildingPhase.getEffects())
+                        if (effect instanceof OnFlip) {
+                            OnFlip onPlayedEffect = (OnFlip) effect;
+                            onPlayedEffect.playEffect(this);
+                        } else
+                            this.effects.add(effect);
                 }
             }
         }
+    }
+
+    public int getGoldToAddInPhase4() {
+        return this.goldToAddInPhase4;
+    }
+
+    public void setGoldToAddInPhase4(int goldToAddInPhase4) {
+        this.goldToAddInPhase4 = goldToAddInPhase4;
     }
 
     public List<Resource> getResources() {
@@ -143,10 +182,8 @@ public class Player {
         playerResource.setQuantity(playerResource.getQuantity() + resource.getQuantity());
     }
 
-    public void addResources(List<Resource> resources) {
-        for (Resource resource : resources) {
-            addResource(resource);
-        }
+    public void addGoldInPhase4(Resource resource) {
+        this.goldToAddInPhase4 += resource.getQuantity();
     }
 
     public void addResourcePerResource(Resource addResource, Resource perResource) {
@@ -156,15 +193,109 @@ public class Player {
                 + (perResourceQuantity / perResource.getQuantity()) * addResource.getQuantity());
     }
 
+    public void addGoldPerResourceInPhase4(Resource addResource, Resource perResource) {
+        this.goldToAddInPhase4 += (getResourceByResourceType(perResource.getResourceType()).getQuantity()
+                / perResource.getQuantity()) * addResource.getQuantity();
+    }
+
+    public void addResourcePerMoon(Resource resource, int moon) {
+        Resource playerResource = getResourceByResourceType(resource.getResourceType());
+        playerResource.setQuantity(playerResource.getQuantity() + resource.getQuantity() * moon);
+    }
+
+    public void addResourcePerAtLeastMoon(int idCard, int moon, Resource resource, boolean onUpdate) {
+        if (onUpdate || getCardInBoardById(idCard).getMoon() >= moon)
+            addResource(resource);
+    }
+
+    public void checkAddResourcePerAtLeastMoon(int idCard, int moon) {
+        List<OnUpdate> addResourcePerAtLeastMoonEffects = this.effects.stream()
+                .filter(effect -> effect instanceof OnUpdate)
+                .map(effect -> (OnUpdate) effect)
+                .filter(effect -> effect.getFunction().equals("addResourcePerAtLeastMoon")
+                        && idCard == effect.getIdCard())
+                .toList();
+        if (addResourcePerAtLeastMoonEffects.size() > 0)
+            for (OnUpdate effect : addResourcePerAtLeastMoonEffects) {
+                Card card = getCardInBoardById(idCard);
+                if (card.getMoon() < effect.getMoon() && card.getMoon() + moon >= effect.getMoon())
+                    effect.addResourcePerAtLeastMoon(this);
+            }
+    }
+
+    public void addGoldPerAtLeastMoon(int idCard, int moon, Resource resource) {
+        if (getCardInBoardById(idCard).getMoon() >= moon)
+            addGoldInPhase4(resource);
+    }
+
+    public void addResourceIfFrontUnit(int idCard, Resource resource) {
+        if (this.board.isPresentFrontCard(idCard)) {
+            addResource(resource);
+        }
+    }
+
+    public void addResourcePerWarWon(Resource resource) {
+        for (int i = 0; i < this.warWon; i++)
+            addResource(resource);
+    }
+
+    public void payGoldInsteadOfResource(int gold, Resource resource, int nb) {
+        Resource playerResource = getResourceByResourceType(resource.getResourceType());
+        playerResource.setQuantity(playerResource.getQuantity() + (gold * nb));
+        setResource(ResourceType.GOLD, getResourceByResourceType(ResourceType.GOLD).getQuantity() - (gold * nb));
+    }
+
+    public void ignoreBuildingCost() {
+        setIgnoreBuildingCost(true);
+    }
+
+    public List<Resource> payResources(BuildingPhase buildingPhase) {
+        if (this.effects.stream().filter(effect -> effect instanceof OnPhase5).map(effect -> (OnPhase5) effect)
+                .anyMatch(effect -> effect.getFunction().equals("payGoldInsteadOfResource")))
+            return null;
+        else if (effects.stream().filter(effect -> effect instanceof OnPhase5).map(effect -> (OnPhase5) effect)
+                .anyMatch(effect -> effect.getFunction().equals("payGoldInsteadOfResources")))
+            return null;
+        else
+            return null;
+    }
+
+    public void deletePaidResources(List<Resource> paidResources) {
+        if (paidResources != null)
+            for (Resource paidResource : paidResources)
+                removeResource(paidResource);
+    }
+
+    public void updateResourcePerMoon(Resource resource, int moon, int moonToAdd) {
+        Resource playerResource = getResourceByResourceType(resource.getResourceType());
+        playerResource.setQuantity(playerResource.getQuantity() + resource.getQuantity() * (moonToAdd / moon));
+    }
+
+    public void checkUpdateResourcePerMoon(int idCard, int moon) {
+        List<OnUpdate> updateResourcePerMoonEffects = this.effects.stream().filter(effect -> effect instanceof OnUpdate)
+                .map(effect -> (OnUpdate) effect)
+                .filter(effect -> effect.getFunction().equals("updateResourcePerMoon") && idCard == effect.getIdCard())
+                .toList();
+        if (updateResourcePerMoonEffects.size() > 0)
+            for (OnUpdate effect : updateResourcePerMoonEffects)
+                effect.updateResourcePerMoon(this, moon);
+    }
+
     public void removeResource(Resource resource) {
         Resource playerResource = getResourceByResourceType(resource.getResourceType());
         playerResource.setQuantity(playerResource.getQuantity() - resource.getQuantity());
     }
 
-    public void removeResources(List<Resource> resources) {
-        for (Resource resource : resources) {
+    public void removeResourcePerMoon(int idCard, Resource resource, int moon) {
+        Resource playerResource = getResourceByResourceType(resource.getResourceType());
+        playerResource.setQuantity(
+                playerResource.getQuantity()
+                        - (resource.getQuantity() * (getCardInBoardById(idCard).getMoon() / moon)));
+    }
+
+    public void removeResourcePerAtLeastMoon(int idCard, int moon, Resource resource) {
+        if (getCardInBoardById(idCard).getMoon() >= moon)
             removeResource(resource);
-        }
     }
 
     public boolean hasEnoughResources(List<Resource> requirements) {
@@ -189,30 +320,58 @@ public class Player {
         return null;
     }
 
-    public List<Effect> getEffects() {
-        return this.effects;
+    public void addMoon(int idCard, int moon) {
+        Card card = getCardInBoardById(idCard);
+        checkUpdateResourcePerMoon(idCard, moon);
+        checkAddResourcePerAtLeastMoon(idCard, moon);
+
+        card.setMoon(card.getMoon() + moon);
     }
 
-    public void addEffect(Effect effect) {
-        this.effects.add(effect);
+    public void addMoonOnAnotherUnit(int idCard, int moon) {
+        addMoon(idCard, moon);
     }
 
-    public void playPhase3Effects() {
-        for (Effect effect : this.effects) {
-            if (effect instanceof OnPhase3) {
-                OnPhase3 onPhase3Effect = (OnPhase3) effect;
-                onPhase3Effect.playEffect(this);
+    public void addMoonPerResourceOnAnotherUnit(Card card, Resource resource, int moon) {
+        addMoon(card.getId(),
+                (getResourceByResourceType(resource.getResourceType()).getQuantity() / resource.getQuantity())
+                        * moon);
+    }
+
+    public void addMoonToAllOtherUnits(int moon, int idCard) {
+        List<Card> cards = this.board.getCards().stream().filter(card -> card.getId() != idCard)
+                .collect(Collectors.toList());
+        if (cards.size() > 0)
+            for (Card card : cards)
+                addMoon(card.getId(), moon);
+    }
+
+    public void upgradeBuildingsInPhase(int phase) {
+        for (Building building : this.buildings) {
+            if (building.getCurrentBuildingPhase() == phase) {
+                buildBuildingPhase(building.getNextBuildingPhase(), 0);
             }
         }
     }
 
-    public void playPhase4Effects() {
-        for (Effect effect : this.effects) {
-            if (effect instanceof OnPhase4) {
-                OnPhase4 onPhase4Effect = (OnPhase4) effect;
-                onPhase4Effect.playEffect(this);
-            }
-        }
+    public void changeform(int idChangeform, Card card) {
+        Card changeformCard = getCardInBoardById(idChangeform);
+        if (this.board.isPresentBackCard(idChangeform)) {
+            this.board.removeBackCard(changeformCard);
+            this.board.addBackCard(card);
+        } else if (this.board.isPresentFrontCard(idChangeform)) {
+            this.board.removeFrontCard(changeformCard);
+            this.board.addFrontCard(card);
+        } else
+            System.out.println("Changeform : card not found");
+    }
+
+    public int getWarWon() {
+        return this.warWon;
+    }
+
+    public void setWarWon(int warWon) {
+        this.warWon = warWon;
     }
 
     public int getWarPoint() {
@@ -227,9 +386,46 @@ public class Player {
         this.warPoint += warPoint;
     }
 
-    public void addWarPointPerResource(int warPoint, Resource resource) {
-        this.warPoint += warPoint
-                * (getResourceByResourceType(resource.getResourceType()).getQuantity() / resource.getQuantity());
+    public void addWarpointPerMoon(int idCard, int warPoint, int moon) {
+        if (this.board.isPresentFrontCard(idCard) || getCardInBoardById(idCard).canFightFromBehind())
+            this.warPoint += (getCardInBoardById(idCard).getMoon() * warPoint * moon);
+    }
+
+    public void addWarpointPerAtLeastMoon(int idCard, int warPoint, int moon) {
+        if (this.board.isPresentFrontCard(idCard) || getCardInBoardById(idCard).canFightFromBehind())
+            if (getCardInBoardById(idCard).getMoon() >= moon)
+                this.warPoint += warPoint;
+    }
+
+    public void addWarpointPerResource(int idCard, int warPoint, Resource resource) {
+        if (idCard == 0 || ((this.board.isPresentFrontCard(idCard)
+                || getCardInBoardById(idCard).canFightFromBehind()) && getCardInBoardById(idCard).canFight()))
+            this.warPoint += warPoint
+                    * (getResourceByResourceType(resource.getResourceType()).getQuantity() / resource.getQuantity());
+    }
+
+    public void addWarpointPerGoldAddedAtNextPhase4(int idCard, int warPoint, Resource resource) {
+        if (this.board.isPresentFrontCard(idCard) || getCardInBoardById(idCard).canFightFromBehind()) {
+            int oldGoldToAddInPhase4 = this.goldToAddInPhase4;
+            for (Effect effect : this.effects) {
+                if (effect instanceof OnPhase4) {
+                    OnPhase4 onPhase4Effect = (OnPhase4) effect;
+                    if ((onPhase4Effect.getResource() != null
+                            && onPhase4Effect.getResource().getResourceType() == resource.getResourceType())
+                            || (onPhase4Effect.getAddResource() != null
+                                    && onPhase4Effect.getAddResource().getResourceType() == resource.getResourceType()))
+                        onPhase4Effect.playEffect(this);
+                }
+            }
+            this.warPoint += warPoint * this.goldToAddInPhase4;
+            this.goldToAddInPhase4 = oldGoldToAddInPhase4;
+        }
+    }
+
+    public void addWarpointPerAtLeastResource(int idCard, int warPoint, Resource resource) {
+        if (this.board.isPresentFrontCard(idCard) || getCardInBoardById(idCard).canFightFromBehind())
+            if (getResourceByResourceType(resource.getResourceType()).getQuantity() >= resource.getQuantity())
+                this.warPoint += warPoint;
     }
 
     public int getPoint() {
@@ -244,9 +440,39 @@ public class Player {
         this.point += point;
     }
 
+    public void addPointPerWarWon(int point) {
+        for (int i = 0; i < this.warWon; i++)
+            addPoint(point);
+    }
+
+    public void addPointPerMoon(int idCard, int point, int moon) {
+        addPoint(getCardInBoardById(idCard).getMoon() * point * moon);
+    }
+
+    public void addPointPerMoonOnDyingUnit(int moon, int point) {
+        for (Card card : this.board.getCards()) {
+            if (card.getMoon() > 0 && !card.isAvoidDeath()) {
+                addPoint(card.getMoon() / moon * point);
+            }
+        }
+    }
+
     public void addPointPerResource(int point, Resource resource) {
         this.point += point
                 * (getResourceByResourceType(resource.getResourceType()).getQuantity() / resource.getQuantity());
+    }
+
+    public void addPointPerResourcePerWarWon(int point, Resource resource) {
+        for (int i = 0; i < this.warWon; i++)
+            addPointPerResource(point, resource);
+    }
+
+    public void removePointIfOnlyXMoon(int idCard, int point, int moon) {
+        if (getCardInBoardById(idCard).getMoon() == moon)
+            if (this.point >= point)
+                this.point -= point;
+            else
+                this.point = 0;
     }
 
     public void addPointPerUnitWithMinAttack(int point, int minAttack) {
@@ -262,8 +488,53 @@ public class Player {
         }
     }
 
+    public void addPointPerBuildingInPhase(int point, int phase) {
+        for (Building building : this.buildings) {
+            if (building.getCurrentBuildingPhase() == phase) {
+                if (this.point + point >= 0)
+                    this.point += point;
+                else
+                    this.point = 0;
+            }
+        }
+    }
+
+    public void avoidDeath(int idCard) {
+        getCardInBoardById(idCard).setAvoidDeath(true);
+    }
+
+    public void avoidDeathIfLessThanMoon(int idCard, int moon) {
+        Card card = getCardInBoardById(idCard);
+        if (card.getMoon() < moon)
+            card.setAvoidDeath(true);
+    }
+
+    public void avoidDeathForOneUnitWithMoon(Card card) {
+        card.setAvoidDeath(true);
+    }
+
+    public void canFightFromBehind(int idCard) {
+        if (this.board.isPresentBackCard(idCard))
+            getCardInBoardById(idCard).setCanFightFromBehind(true);
+    }
+
+    public void cannotFightIfAtLeastMoon(int idCard, int moon) {
+        Card card = getCardInBoardById(idCard);
+        if (card.getMoon() >= moon)
+            card.setCanFight(false);
+    }
+
     public Card getCardInHandById(int idCard) {
         for (Card card : this.hand) {
+            if (card.getId() == idCard) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    public Card getCardInBoardById(int idCard) {
+        for (Card card : this.board.getCards()) {
             if (card.getId() == idCard) {
                 return card;
             }
@@ -276,8 +547,9 @@ public class Player {
     }
 
     public void playCardById(int idCard, boolean front) {
-        Card card = this.getCardInHandById(idCard);
+        Card card = getCardInHandById(idCard);
         Card newCard = new Card(card);
+        newCard.setFlipped(true);
         if (front)
             this.board.addFrontCard(newCard);
         else
@@ -285,6 +557,166 @@ public class Player {
         this.hand.remove(card);
         setResource(ResourceType.GOLD,
                 this.resources.get(ResourceType.GOLD.ordinal()).getQuantity() - card.getCost());
+    }
+
+    public List<Effect> getEffects() {
+        return this.effects;
+    }
+
+    public void addEffect(Effect effect) {
+        this.effects.add(effect);
+    }
+
+    public void removeEffect(Effect effect) {
+        this.effects.remove(effect);
+    }
+
+    public void removeEffectsByCardId(int cardId) {
+        List<Effect> effects = this.effects.stream().filter(effect -> effect.getIdCard() == cardId).toList();
+        for (Effect effect : effects)
+            this.removeEffect(effect);
+    }
+
+    public List<Card> findCardsWithAddResourceIfFrontUnit(List<Card> cards) {
+        List<Card> cardsWithAddResourceIfFrontUnit = new ArrayList<Card>();
+        for (Card card : cards) {
+            if (card.getEffects().stream().anyMatch(effect -> effect instanceof OnUpdate
+                    && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit")))
+                cardsWithAddResourceIfFrontUnit.add(card);
+        }
+        return cardsWithAddResourceIfFrontUnit;
+    }
+
+    public void playCardsWithAddResourceIfFrontUnit(List<Card> cards) {
+        if (cards.size() > 0)
+            for (Card card : cards)
+                if (card.isMoved()) {
+                    if (this.board.isPresentFrontCard(card.getId())) {
+                        for (Effect effect : card.getEffects())
+                            if (effect instanceof OnUpdate
+                                    && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit"))
+                                ((OnUpdate) effect).addResourceIfFrontUnit(this);
+                    } else {
+                        if (this.board.isPresentBackCard(card.getId()))
+                            for (Effect effect : card.getEffects())
+                                if (effect instanceof OnUpdate
+                                        && ((OnUpdate) effect).getFunction().equals("removeResourceIfFrontUnit"))
+                                    ((OnUpdate) effect).removeResourceIfFrontUnit(this);
+                    }
+                }
+    }
+
+    public void discardCardsWithAddResourceIfFrontUnit(List<Card> cards) {
+        if (cards.size() > 0)
+            for (Card card : cards)
+                discardCardWithAddResourceIfFrontUnit(card);
+    }
+
+    public void discardCardWithAddResourceIfFrontUnit(Card card) {
+        if (this.board.isPresentBackCard(card.getId()))
+            for (Effect effect : card.getEffects())
+                if (effect instanceof OnUpdate
+                        && ((OnUpdate) effect).getFunction().equals("removeResourceIfFrontUnit"))
+                    ((OnUpdate) effect).removeResourceIfFrontUnit(this);
+    }
+
+    public void playOnFlipEffect(OnFlip effect, Card card) {
+        if (effect.getFunction().equals("addMoonOnAnotherUnit"))
+            effect.addMoonOnAnotherUnit(this, this.board.getCards().get(0).getId());
+        else if (!effect.getFunction().equals("changeform"))
+            effect.playEffect(this);
+    }
+
+    public void playOnDeathEffects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnDeath) {
+                ((OnDeath) effect).playEffect(this);
+            }
+        }
+    }
+
+    public void playPhase2Effects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnPhase2) {
+                OnPhase2 onPhase2Effect = (OnPhase2) effect;
+                if (onPhase2Effect.getFunction().equals("addMoonPerResourceOnAnotherUnit"))
+                    onPhase2Effect.addMoonPerResourceOnAnotherUnit(this, this.board.getCards().get(0));
+                else
+                    onPhase2Effect.playEffect(this);
+            }
+        }
+    }
+
+    public void playPhase3Effects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnPhase3) {
+                OnPhase3 onPhase3Effect = (OnPhase3) effect;
+                if (!onPhase3Effect.getFunction().equals("payGoldInsteadOfResources"))
+                    onPhase3Effect.playEffect(this);
+            }
+        }
+    }
+
+    public void playOnEndPhase3Effects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnEndPhase3) {
+                ((OnEndPhase3) effect).playEffect(this);
+            }
+        }
+    }
+
+    public void playPhase4Effects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnPhase4) {
+                ((OnPhase4) effect).playEffect(this);
+            }
+        }
+    }
+
+    public void playPhase5Effects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnPhase5) {
+                OnPhase5 onPhase5Effect = (OnPhase5) effect;
+                if (!onPhase5Effect.getFunction().equals("payGoldInsteadOfResource")
+                        && !onPhase5Effect.getFunction().equals("payGoldInsteadOfResources"))
+                    onPhase5Effect.playEffect(this);
+            }
+        }
+    }
+
+    public void playPhase6Effects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnPhase6) {
+                OnPhase6 onPhase6Effect = (OnPhase6) effect;
+                if (!onPhase6Effect.getFunction().equals("avoidDeathForOneUnitWithMoon"))
+                    onPhase6Effect.playEffect(this);
+            }
+        }
+    }
+
+    public void playOnPhase6DeathEffects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnPhase6Death) {
+                ((OnPhase6Death) effect).playEffect(this);
+            }
+        }
+    }
+
+    public void playEndGameEffects() {
+        for (Effect effect : this.effects) {
+            if (effect instanceof OnEndGame) {
+                OnEndGame onEndGameEffect = (OnEndGame) effect;
+                onEndGameEffect.playEffect(this);
+            }
+        }
+    }
+
+    public void addPointFromBuildings() {
+        for (Building building : this.buildings) {
+            BuildingPhase buildingPhase = building.getBuildingPhase(building.getCurrentBuildingPhase());
+            if (buildingPhase != null)
+                this.point += buildingPhase.getPoint();
+        }
     }
 
     public void printPlayer() {
@@ -310,7 +742,7 @@ public class Player {
 
         System.out.println("Back: ");
         if (this.board.getBackCards() != null)
-            for (Card card : board.getBackCards())
+            for (Card card : this.board.getBackCards())
                 card.printCard();
         else
             System.out.println("Empty");
@@ -333,7 +765,7 @@ public class Player {
 
     public void printResources() {
         System.out.print("Player " + this.id + " resources: ");
-        for (Resource resource : resources) {
+        for (Resource resource : this.resources) {
             resource.printResource();
             System.out.print(", ");
         }

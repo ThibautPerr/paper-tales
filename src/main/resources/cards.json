@@ -4,126 +4,346 @@
         "name": "Singe chapardeur",
         "cost": -1,
         "attack": 1,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnPhase6Death",
+                "function": "addResourcePerMoon",
+                "moon": 1,
+                "resource": {
+                    "resourceType": "GOLD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 2,
         "name": "Sculptrice",
         "cost": 0,
         "attack": 1,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnPhase6Death",
+                "function": "addPoint",
+                "point": 3
+            }
+        ]
     },
     {
         "id": 3,
         "name": "Aventurière",
         "cost": 0,
         "attack": 2,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnUpdate",
+                "function": "updateResourcePerMoon",
+                "moon": 1,
+                "resource": {
+                    "resourceType": "CRYSTAL",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResourcePerMoon",
+                "moon": 1,
+                "resource": {
+                    "resourceType": "CRYSTAL",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 4,
         "name": "Vétéran",
         "cost": 0,
         "attack": 3,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addMoon",
+                "moon": 1
+            }
+        ]
     },
     {
         "id": 4,
         "name": "Négociante en bois",
         "cost": 0,
         "attack": 1,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnPhase5",
+                "function": "payGoldInsteadOfResource",
+                "gold": 1,
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 5,
         "name": "Milicienne",
         "cost": 0,
         "attack": 2,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerMoon",
+                "point": 1,
+                "moon": 1
+            }
+        ]
     },
     {
         "id": 6,
         "name": "Maîtresse du temps",
         "cost": 0,
         "attack": 1,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addMoonOnAnotherUnit",
+                "moon": 2
+            }
+        ]
     },
     {
         "id": 7,
         "name": "Chasseur",
         "cost": 0,
         "attack": 2,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnUpdate",
+                "function": "addResourceIfFrontUnit",
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnUpdate",
+                "function": "removeResourceIfFrontUnit",
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": -1
+                }
+            }
+        ]
     },
     {
         "id": 8,
         "name": "Bûcheron",
         "cost": 0,
         "attack": 2,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 9,
         "name": "Changeforme",
         "cost": 0,
         "attack": 0,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "changeform"
+            }
+        ]
     },
     {
         "id": 10,
         "name": "Cerbère",
         "cost": 0,
         "attack": 2,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerAtLeastResource",
+                "point": 1,
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 11,
         "name": "Fermier",
         "cost": 0,
         "attack": 1,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 12,
         "name": "Cuisinier",
         "cost": 0,
         "attack": 1,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnPhase4",
+                "function": "addResourcePerResource",
+                "addResource": {
+                    "resourceType": "GOLD",
+                    "quantity": 1
+                },
+                "perResource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 13,
         "name": "Forgeronne",
         "cost": 0,
         "attack": 1,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnPhase4",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "GOLD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 14,
         "name": "Mystique",
         "cost": 0,
         "attack": 1,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnPhase6",
+                "function": "avoidDeathForOneUnitWithMoon",
+                "moon": 1
+            }
+        ]
     },
     {
         "id": 15,
         "name": "Nécromancienne",
         "cost": 1,
         "attack": 4,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addMoonToAllOtherUnits",
+                "moon": 1
+            }
+        ]
     },
     {
         "id": 16,
         "name": "Serpent Géant",
         "cost": 1,
         "attack": 4,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerAtLeastMoon",
+                "point": -4,
+                "moon": 1
+            },
+            {
+                "type": "OnPhase4",
+                "function": "addResourcePerAtLeastMoon",
+                "moon": 1,
+                "resource": {
+                    "resourceType": "GOLD",
+                    "quantity": 3
+                }
+            }
+        ]
     },
     {
         "id": 17,
         "name": "Esprit des cavernes",
         "cost": 1,
         "attack": 4,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addMoon",
+                "moon": 1
+            },
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "CRYSTAL",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "CRYSTAL",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 18,
@@ -137,160 +357,522 @@
         "name": "Mineur",
         "cost": 1,
         "attack": 2,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "CRYSTAL",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "CRYSTAL",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 20,
         "name": "Archère",
         "cost": 1,
         "attack": 2,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "canFightFromBehind"
+            }
+        ]
     },
     {
         "id": 21,
         "name": "Grand Architecte",
         "cost": 1,
         "attack": 1,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase5",
+                "function": "payGoldInsteadOfResources",
+                "gold": 1
+            }
+        ]
     },
     {
         "id": 22,
         "name": "Enfant des forêts",
         "cost": 1,
         "attack": 1,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 23,
         "name": "Pillarde",
         "cost": 1,
         "attack": 3,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnEndPhase3",
+                "function": "addResourcePerWarWon",
+                "resource": {
+                    "resourceType": "GOLD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 24,
         "name": "Colporteur",
         "cost": 1,
         "attack": 1,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnPhase4",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "GOLD",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 25,
         "name": "Homme arbre",
         "cost": 1,
         "attack": 3,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 26,
         "name": "Relique",
         "cost": 2,
         "attack": 0,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase6",
+                "function": "avoidDeath"
+            },
+            {
+                "type": "OnEndGame",
+                "function": "addPointPerMoon",
+                "point": 2,
+                "moon": 1
+            }
+        ]
     },
     {
         "id": 27,
         "name": "Démon",
         "cost": 2,
         "attack": 7,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addMoon",
+                "moon": 1
+            },
+            {
+                "type": "OnPhase6Death",
+                "function": "removePointIfOnlyXMoon",
+                "point": 3,
+                "moon": 1
+            }
+        ]
     },
     {
         "id": 28,
         "name": "Maître Alchimiste",
         "cost": 2,
         "attack": 1,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase2",
+                "function": "addMoonPerResourceOnAnotherUnit",
+                "moon": 1,
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnEndPhase3",
+                "function": "addPointPerResourcePerWarWon",
+                "point": 1,
+                "resource": {
+                    "resourceType": "CRYSTAL",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnPhase4",
+                "function": "addResourcePerResource",
+                "addResource": {
+                    "resourceType": "GOLD",
+                    "quantity": 1
+                },
+                "perResource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 29,
         "name": "Chiromancienne",
         "cost": 2,
         "attack": 1,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnPhase6",
+                "function": "addPointPerMoonOnDyingUnit",
+                "point": 1,
+                "moon": 1
+            }
+        ]
     },
     {
         "id": 30,
         "name": "Général",
         "cost": 2,
         "attack": 4,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnEndPhase3",
+                "function": "addPointPerWarWon",
+                "point": 1
+            }
+        ]
     },
     {
         "id": 31,
         "name": "Salamandre",
         "cost": 2,
         "attack": 4,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerMoon",
+                "point": 1,
+                "moon": 1
+            },
+            {
+                "type": "OnPhase6",
+                "function": "avoidDeathIfLessThanMoon",
+                "moon": 2
+            }
+        ]
     },
     {
         "id": 32,
         "name": "Golem",
         "cost": 2,
         "attack": 3,
-        "copy": 2
+        "copy": 2,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "upgradeBuildingsInPhase",
+                "phase": 1
+            }
+        ]
     },
     {
         "id": 33,
         "name": "Colosse",
         "cost": 2,
         "attack": 1,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerAtLeastMoon",
+                "point": 6,
+                "moon": 1
+            },
+            {
+                "type": "OnEndPhase3",
+                "function": "addPointPerWarWon",
+                "point": 1
+            }
+        ]
     },
     {
         "id": 34,
         "name": "Ogre",
         "cost": 2,
         "attack": 2,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerGoldAddedAtNextPhase4",
+                "point": 1,
+                "resource": {
+                    "resourceType": "GOLD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 35,
         "name": "Notable",
         "cost": 2,
         "attack": 1,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase5",
+                "function": "ignoreBuildingCost"
+            },
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 36,
         "name": "Manticore",
         "cost": 2,
         "attack": 2,
-        "copy": 3
+        "copy": 3,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerResource",
+                "point": 2,
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 37,
         "name": "Léviathan",
         "cost": 3,
         "attack": 4,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerResource",
+                "point": 2,
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 1
+                }
+            },
+            {
+                "type": "OnPhase2",
+                "function": "cannotFightIfAtLeastMoon",
+                "moon": 1
+            },
+            {
+                "type": "OnUpdate",
+                "function": "addResourcePerAtLeastMoon",
+                "moon": 1,
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 2
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResourcePerAtLeastMoon",
+                "moon": 1,
+                "resource": {
+                    "resourceType": "MEAT",
+                    "quantity": 2
+                }
+            }
+        ]
     },
     {
         "id": 38,
         "name": "Dragon",
         "cost": 3,
         "attack": 0,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerAtLeastResource",
+                "point": 7,
+                "resource": {
+                    "resourceType": "CRYSTAL",
+                    "quantity": 1
+                }
+            }
+        ]
     },
     {
         "id": 39,
         "name": "Esprit des forêts",
         "cost": 3,
         "attack": 3,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 3
+                }
+            },
+            {
+                "type": "OnDeath",
+                "function": "removeResource",
+                "resource": {
+                    "resourceType": "WOOD",
+                    "quantity": 3
+                }
+            }
+        ]
     },
     {
         "id": 41,
         "name": "Stratège",
         "cost": 3,
         "attack": 1,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnPhase3",
+                "function": "addWarpointPerMoon",
+                "point": 1,
+                "moon": 1
+            },
+            {
+                "type": "OnPhase3",
+                "function": "canFightFromBehind"
+            }
+        ]
     },
     {
         "id": 42,
         "name": "Kraken",
         "cost": 6,
         "attack": 9,
-        "copy": 1
+        "copy": 1,
+        "effects": [
+            {
+                "type": "OnFlip",
+                "function": "addPointPerBuildingInPhase",
+                "point": -3,
+                "phase": 2
+            },
+            {
+                "type": "OnFlip",
+                "function": "addMoonToAllOtherUnits",
+                "moon": 1
+            },
+            {
+                "type": "OnPhase6",
+                "function": "addPointPerMoonOnDyingUnit",
+                "point": 1,
+                "moon": 1
+            }
+        ]
     }
 ]

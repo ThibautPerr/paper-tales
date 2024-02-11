@@ -3,6 +3,7 @@ package com.example.utils;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.json.simple.JSONArray;
@@ -12,8 +13,14 @@ import org.json.simple.parser.ParseException;
 import com.example.Building;
 import com.example.BuildingPhase;
 import com.example.Card;
+import com.example.Deck;
 import com.example.Player;
+import com.example.Resource;
 import com.example.Resource.ResourceType;
+import com.example.effects.Effect;
+import com.example.effects.OnFlip;
+import com.example.effects.OnPhase6;
+import com.example.effects.OnUpdate;
 
 public abstract class Utils {
     public static final boolean PRINT_START_PHASE_1 = false;
@@ -63,7 +70,7 @@ public abstract class Utils {
         return buildings;
     }
 
-    public static void phase1(List<Player> players, List<Card> deck) {
+    public static void phase1(List<Player> players, Deck deck) {
         if (PRINT_START_PHASE_1)
             System.out.println("\n--------------- Start phase1 ---------------");
 
@@ -72,8 +79,8 @@ public abstract class Utils {
         for (int i = 0; i < players.size(); i++) {
             List<Card> cards = new ArrayList<Card>();
             for (int j = 0; j < 5; j++) {
-                cards.add(deck.get(0));
-                deck.remove(0);
+                cards.add(deck.getDeck().get(0));
+                deck.getDeck().remove(0);
             }
             drewCards.add(cards);
         }
@@ -105,7 +112,7 @@ public abstract class Utils {
         cards.remove(0);
     }
 
-    public static void phase2(List<Player> players, List<Card> discardPile) {
+    public static void phase2(List<Player> players, Deck deck, List<Card> discardPile) {
         if (PRINT_START_PHASE_2) {
             System.out.println("\n--------------- Start phase2 ---------------");
             for (Player player : players) {
@@ -120,8 +127,11 @@ public abstract class Utils {
                         + player.getResourceByResourceType(ResourceType.GOLD).getQuantity());
             }
         }
+
+        for (Player player : players)
+            player.playPhase2Effects();
         boardsReorganisation(players);
-        playCards(players);
+        playCards(players, deck);
         discardCards(players, discardPile);
         if (PRINT_END_PHASE_2) {
             for (Player player : players) {
@@ -141,42 +151,79 @@ public abstract class Utils {
 
     public static void boardsReorganisation(List<Player> players) {
         // TODO Create a reorganisation method
+        // Current : remove every card from the board
+        // If a card with an effect addResourceIfFrontUnit is moved from back to front,
+        // trigger adding effect, else trigger remove
 
-        // List<Card> newFrontCard =
-        // Card.deepCopyCards(player.getBoard().getFrontCards());
-        // for (int i = 0; i < newFrontCard.size(); i++) {
-        // player.getBoard().removeFrontCardById(newFrontCard.get(0).getId());
-        // }
-
-        // List<Card> newBackCard =
-        // Card.deepCopyCards(player.getBoard().getBackCards());
-        // for (int i = 0; i < newBackCard.size(); i++) {
-        // player.getBoard().removeBackCardById(newBackCard.get(0).getId());
-        // }
+        for (Player player : players) {
+            List<Card> cards = player
+                    .findCardsWithAddResourceIfFrontUnit(player.getBoard().getCards());
+            // discardCards(player, player.getBoard().getFrontCards());
+            // discardCards(player, player.getBoard().getBackCards());
+            player.playCardsWithAddResourceIfFrontUnit(cards);
+        }
     }
 
-    public static void playCards(List<Player> players) {
+    public static void discardCards(Player player, List<Card> cards) {
+        List<Card> copyCards = new ArrayList<>(cards);
+
+        for (Card card : copyCards) {
+            player.playOnDeathEffects();
+
+            // particular case for cards with addResourceIfFrontUnit effect
+            player.discardCardsWithAddResourceIfFrontUnit(
+                    player.findCardsWithAddResourceIfFrontUnit(cards));
+
+            player.removeEffectsByCardId(card.getId());
+            player.getBoard().removeCardById(card.getId());
+        }
+    }
+
+    public static void playCards(List<Player> players, Deck deck) {
         for (Player player : players) {
             // TODO Create a play method
             // Play card if there is space on the front board
-            List<Card> newHand = Card.deepCopyCards(player.getHand());
-            newHand.sort((c1, c2) -> c2.getAttack() - c1.getAttack());
-            for (Card cardToPlay : newHand) {
-                if (cardToPlay.getCost() <= player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
+            Iterator<Card> itFront = player.getHand().stream().sorted(
+                    (c1, c2) -> c2.getAttack() - c1.getAttack()).iterator(); // In priority, play cards with most attack
+            while (itFront.hasNext()) {
+                Card card = itFront.next();
+                if (card.getCost() <= player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
                         && player.getBoard().getFrontCards().size() < player.getBoard().getMaxFrontCards()) {
-                    player.playCardById(cardToPlay.getId(), true);
+                    player.playCardById(card.getId(), true);
                 }
             }
 
             // Play card if there is space on the back board
-            newHand = Card.deepCopyCards(player.getHand());
-            for (Card cardToPlay : newHand) {
-                if (cardToPlay.getCost() <= player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
+            Iterator<Card> itBack = player.getHand().stream().sorted(
+                    (c1, c2) -> c2.getAttack() - c1.getAttack()).iterator(); // In priority, play cards with most attack
+            while (itBack.hasNext()) {
+                Card card = itBack.next();
+                if (card.getCost() <= player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
                         && player.getBoard().getBackCards().size() < player.getBoard().getMaxBackCards()) {
-                    player.playCardById(cardToPlay.getId(), false);
+                    player.playCardById(card.getId(), false);
+                }
+            }
+
+            // Turn flipped cards
+            for (Card card : player.getBoard().getCards().stream().filter(card -> card.isFlipped()).toList()) {
+                card.setFlipped(false);
+                for (Effect effect : card.getEffects()) {
+                    if (effect instanceof OnFlip && ((OnFlip) effect).getFunction().equals("changeform"))
+                        ((OnFlip) effect).changeform(player, deck.getFirstCard());
+                }
+                for (Effect effect : card.getEffects()) {
+                    if (effect instanceof OnFlip)
+                        player.playOnFlipEffect((OnFlip) effect, card);
+                    else
+                        player.addEffect(effect);
+                    if (effect instanceof OnUpdate
+                            && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit")) {
+                        ((OnUpdate) effect).addResourceIfFrontUnit(player);
+                    }
                 }
             }
         }
+
     }
 
     public static void discardCards(List<Player> players, List<Card> discardPile) {
@@ -199,21 +246,18 @@ public abstract class Utils {
             if (PRINT_START_PHASE_3) {
                 System.out.println("Player " + player.getId() + " starting board: ");
                 player.getBoard().printBoard();
+                System.out.println("Player " + player.getId() + " points : " + player.getPoint());
             }
 
             player.setWarPoint(0);
-            for (Card frontCard : player.getBoard().getFrontCards()) {
-                player.addWarPoint(frontCard.getAttack());
-            }
-
+            player.setWarWon(0);
             player.playPhase3Effects();
-        }
 
-        if (PRINT_END_PHASE_3) {
-            for (Player player : players) {
-                System.out.println("Player " + player.getId() + " war points: " + player.getWarPoint() + ", points : "
-                        + player.getPoint());
-            }
+            for (Card card : player.getBoard().getCards())
+                if (card.canFight() &&
+                        (player.getBoard().isPresentFrontCard(card.getId()) || card.canFightFromBehind()))
+                    player.addWarPoint(card.getAttack());
+
         }
 
         // Each player confronts his two neighbours, if he has more attack than his
@@ -224,16 +268,21 @@ public abstract class Utils {
             Player rightPlayer = players.get(i == players.size() - 1 ? 0 : i + 1);
 
             if (leftPlayer.getWarPoint() <= player.getWarPoint()) {
+                player.setWarWon(player.getWarWon() + 1);
                 player.setPoint(player.getPoint() + 3);
             }
             if (rightPlayer.getWarPoint() <= player.getWarPoint()) {
+                player.setWarWon(player.getWarWon() + 1);
                 player.setPoint(player.getPoint() + 3);
             }
+
+            player.playOnEndPhase3Effects();
         }
 
         if (PRINT_END_PHASE_3) {
             for (Player player : players) {
-                System.out.println("Player " + player.getId() + " points : " + player.getPoint());
+                System.out.println("Player " + player.getId() + " war points: " + player.getWarPoint() + ", points : "
+                        + player.getPoint());
             }
             System.out.println("--------------- End phase3 ---------------");
         }
@@ -249,14 +298,15 @@ public abstract class Utils {
                         + player.getResourceByResourceType(ResourceType.GOLD).getQuantity());
 
         for (Player player : players) {
-            player.setResource(ResourceType.GOLD,
-                    player.getResourceByResourceType(ResourceType.GOLD).getQuantity() + 2);
+            player.setGoldToAddInPhase4(player.getGoldToAddInPhase4());
             player.playPhase4Effects();
+            player.setResource(ResourceType.GOLD, player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
+                    + player.getGoldToAddInPhase4());
+            player.setGoldToAddInPhase4(2);
         }
 
         if (PRINT_END_PHASE_4)
             for (Player player : players) {
-                System.out.print("Player " + player.getId() + " : ");
                 player.printResources();
             }
 
@@ -275,6 +325,7 @@ public abstract class Utils {
             }
 
         for (Player player : players) {
+            player.playPhase5Effects();
             List<BuildingPhase> buildableBuildingPhases = player.getBuildableBuildingPhases();
 
             // TODO : Create a build BuildingPhase method
@@ -282,10 +333,15 @@ public abstract class Utils {
             boolean built = false;
             while (!built && i < buildableBuildingPhases.size()) {
                 BuildingPhase buildingPhase = buildableBuildingPhases.get(i);
+
+                List<Resource> paidResources = player.payResources(buildingPhase);
+
                 if (player.hasEnoughResources(buildingPhase.getRequirements())
-                        || player.hasEnoughResources(buildingPhase.getOptionnalRequirements())) {
+                        || player.hasEnoughResources(buildingPhase.getOptionnalRequirements())
+                        || player.isIgnoreBuildingCost()) {
                     player.buildBuildingPhase(buildingPhase, player.builtWithGold(buildingPhase));
                     built = true;
+                    player.deletePaidResources(paidResources);
                 }
                 i++;
             }
@@ -310,21 +366,23 @@ public abstract class Utils {
                 System.out.println("Player " + player.getId() + " starting board: ");
                 player.getBoard().printBoard();
             }
-            List<Card> newFrontCard = Card.deepCopyCards(player.getBoard().getFrontCards());
-            for (int i = 0; i < newFrontCard.size(); i++)
-                if (newFrontCard.get(i).getMoon() > 0)
-                    player.getBoard().removeFrontCardById(newFrontCard.get(i).getId());
 
-            List<Card> newBackCard = Card.deepCopyCards(player.getBoard().getBackCards());
-            for (int i = 0; i < newBackCard.size(); i++)
-                if (newBackCard.get(i).getMoon() > 0)
-                    player.getBoard().removeBackCardById(newBackCard.get(i).getId());
+            player.playPhase6Effects();
+            playAvoidDeathForOneUnitWithMoon(player);
 
-            for (Card card : player.getBoard().getFrontCards())
-                card.setMoon(card.getMoon() + 1);
+            List<Card> cards = player.getBoard().getCards();
+            for (Card card : cards) {
+                if (card.getMoon() > 0) {
+                    player.playOnPhase6DeathEffects();
+                    player.playOnDeathEffects();
+                    player.discardCardWithAddResourceIfFrontUnit(card);
+                    player.removeEffectsByCardId(card.getId());
+                    player.getBoard().removeCardById(card.getId());
+                }
+            }
 
-            for (Card card : player.getBoard().getBackCards())
-                card.setMoon(card.getMoon() + 1);
+            for (Card card : player.getBoard().getCards())
+                player.addMoon(card.getId(), 1);
 
             if (PRINT_END_PHASE_6) {
                 System.out.println("Player " + player.getId() + " ending board: ");
@@ -335,4 +393,35 @@ public abstract class Utils {
             System.out.println("--------------- End phase6 ---------------");
     }
 
+    public static void playAvoidDeathForOneUnitWithMoon(Player player) {
+        List<OnPhase6> avoidDeathForOneUnitWithMoonEffects = player.getEffects().stream()
+                .filter(effect -> effect instanceof OnPhase6).map(effect -> (OnPhase6) effect)
+                .filter(effect -> effect.getFunction().equals("avoidDeathForOneUnitWithMoon")).toList();
+        if (avoidDeathForOneUnitWithMoonEffects.size() > 0) {
+            int i = 0;
+            for (OnPhase6 effect : avoidDeathForOneUnitWithMoonEffects) {
+                effect.avoidDeathForOneUnitWithMoon(player, player.getBoard().getCards().stream()
+                        .filter(card -> card.getMoon() >= 0 && !card.isAvoidDeath()).toList().get(i));
+                i++;
+            }
+        }
+    }
+
+    // Trigger end game effects
+    // Add buildings points to the players points
+
+    // The player with the most points wins
+    // If there is a tie, the player with the most gold wins
+    // If there is still a tie, the players share the victory
+    public static void endGame(List<Player> players) {
+        for (Player player : players) {
+            player.playEndGameEffects();
+            player.addPointFromBuildings();
+        }
+
+        players.stream().sorted((p1, p2) -> p2.getPoint() - p1.getPoint())
+                .forEach(player -> System.out.println("Player "
+                        + player.getId() + " has " + player.getPoint() + " points and "
+                        + player.getResourceByResourceType(ResourceType.GOLD).getQuantity() + " golds"));
+    }
 }
