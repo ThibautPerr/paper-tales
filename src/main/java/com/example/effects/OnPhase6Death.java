@@ -68,13 +68,14 @@ public class OnPhase6Death extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (this.point != 0)
             System.out.println("Point: " + this.point);
         if (this.resource != null)
             this.resource.printResource();
         if (this.moon != 0)
             System.out.println("Moon: " + this.moon);
+        System.out.println();
     }
 
     @Override

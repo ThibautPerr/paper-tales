@@ -63,11 +63,12 @@ public class OnUpdate extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (this.moon != 0)
             System.out.println("moon " + this.moon);
         if (this.resource != null)
             this.resource.printResource();
+        System.out.println();
     }
 
     @Override

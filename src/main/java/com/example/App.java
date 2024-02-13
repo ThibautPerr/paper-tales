@@ -8,90 +8,120 @@ import com.example.strategy.Strategy;
 import com.example.strategy.boardReorganisation.NaiveBoardReorganisation;
 import com.example.strategy.build.NaiveBuild;
 import com.example.strategy.build.RandomBuild;
+import com.example.strategy.chooseCard.NaiveChooseCard;
+import com.example.strategy.chooseCard.SmartChooseCard;
+import com.example.strategy.keepCard.KeepStrongestCard;
 import com.example.strategy.keepCard.NaiveKeepCard;
 import com.example.strategy.boardReorganisation.DiscardAllBoardReorganisation;
 import com.example.strategy.pickCard.NaivePickCard;
 import com.example.strategy.playCard.NaivePlayCard;
+import com.example.strategy.playCard.PlayStrongCard;
 import com.example.utils.Utils;
 
 public class App {
     public static void main(String[] args) {
-        // Setup the game
-        Deck deck = new Deck(Utils.createCards());
-        deck.shuffle();
-        List<Card> discardPile = new ArrayList<Card>();
+        int gamesPlayed = 1000;
 
-        List<Strategy> strategies = new ArrayList<Strategy>();
-        strategies.add(new Strategy(
-                new NaivePickCard(),
-                new NaiveBoardReorganisation(),
-                new NaivePlayCard(),
-                new NaiveKeepCard(),
-                new NaiveBuild()));
-        strategies.add(new Strategy(
-                new NaivePickCard(),
-                new NaiveBoardReorganisation(),
-                new NaivePlayCard(),
-                new NaiveKeepCard(),
-                new RandomBuild()));
-        strategies.add(new Strategy(
-                new NaivePickCard(),
-                new DiscardAllBoardReorganisation(),
-                new NaivePlayCard(),
-                new NaiveKeepCard(),
-                new NaiveBuild()));
-        strategies.add(new Strategy(
-                new NaivePickCard(),
-                new DiscardAllBoardReorganisation(),
-                new NaivePlayCard(),
-                new NaiveKeepCard(),
-                new RandomBuild()));
-        List<Player> players = Utils.createPlayers(strategies.size(), strategies);
+        List<Strategy> strategies = createStrategies();
 
-        List<Building> buildings = Utils.createBuildings();
-        for (Player player : players) {
-            player.setBuildings(buildings);
-            player.setResource(ResourceType.GOLD, 3);
+        List<Stat> stats = new ArrayList<Stat>();
+        for (int i = 0; i < strategies.size(); i++) {
+            stats.add(new Stat(i));
         }
 
-        // There are 4 turns played
+        for (int i = 0; i < gamesPlayed; i++) {
+            List<Player> players = Utils.createPlayers(strategies.size(), strategies);
+
+            // ------------- Setup the game ------------
+            Deck deck = new Deck(Utils.createCards());
+            deck.shuffle();
+            List<Card> discardPile = new ArrayList<Card>();
+
+            List<Building> buildings = Utils.createBuildings();
+
+            for (Player player : players) {
+                player.setBuildings(buildings);
+                player.setResource(ResourceType.GOLD, 3);
+            }
+
+            // ------------- Play the game ------------
+            List<Result> results = playGame(players, deck, discardPile);
+
+            // ------------- Print results ------------
+            // printGameResult(results);
+
+            // ------------- Compute stats ------------
+            for (Player player : players) {
+                Result result = results.stream().filter(tmpResult -> tmpResult.getPlayerId() == player.getId())
+                        .findFirst().get();
+                stats.stream().filter(stat -> stat.getPlayerId() == player.getId()).findFirst().get()
+                        .addGame(result.getPlayerPlace(), result.getPlayerPoint());
+            }
+        }
+
+        for (Stat stat : stats) {
+            System.out.println("Player " + stat.getPlayerId() + " has played " +
+                    stat.gamesPlayed
+                    + " games : avg. place : " + stat.averagePlace()
+                    + ", avg. points : " + stat.averagePoints());
+        }
+    }
+
+    public static List<Strategy> createStrategies() {
+        List<Strategy> strategies = new ArrayList<Strategy>();
+        // Naive strategy
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new NaiveBoardReorganisation(),
+                new NaivePlayCard(),
+                new NaiveKeepCard(),
+                new NaiveBuild(),
+                new NaiveChooseCard()));
+        // ?
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new NaiveBoardReorganisation(),
+                new NaivePlayCard(),
+                new NaiveKeepCard(),
+                new RandomBuild(),
+                new SmartChooseCard()));
+        // Smart strategy keeping board
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new NaiveBoardReorganisation(),
+                new PlayStrongCard(),
+                new KeepStrongestCard(),
+                new RandomBuild(),
+                new SmartChooseCard()));
+        // Smart strategy discarding board
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new DiscardAllBoardReorganisation(),
+                new PlayStrongCard(),
+                new KeepStrongestCard(),
+                new RandomBuild(),
+                new SmartChooseCard()));
+
+        return strategies;
+    }
+
+    public static List<Result> playGame(List<Player> players, Deck deck, List<Card> discardPile) {
+        // System.out.println("----------------- Game -----------------");
         for (int i = 0; i < 4; i++) {
-            System.out.println("Turn " + (i + 1));
-
-            // Phase 1 : Each player draws 5 cards, picks one, and pass it to the next
-            // Repeat until there is no more cards
             Utils.phase1(players, deck);
-
-            // Phase 2 : Each player reoarganises his board
-            // Then play as many cards as he wants and pay the cost
-
-            // Cards are revealed
-
-            // Each player can only keep one card in hand
             Utils.phase2(players, deck, discardPile);
-
-            // Phase 3 : For each player, if he has more attack than his neighbour, he gains
-            // 3 points
             Utils.phase3(players);
-
-            // Phase 4 : Each player gains 2 golds
             Utils.phase4(players);
-
-            // Phase 5 : Each player can build one building, if he has the requirements and
-            // has built the previous phase of the building
             Utils.phase5(players);
-
-            // Phase 6 : Each units with a moon counter dies
-            // Then each units gains a moon counter
             Utils.phase6(players, discardPile);
         }
+        return Utils.endGame(players);
+    }
 
-        // Trigger end game effects
-        // Add buildings points to the players points
-
-        // The player with the most points wins
-        // If there is a tie, the player with the most gold wins
-        // If there is still a tie, the players share the victory
-        Utils.endGame(players);
+    public static void printGameResult(List<Result> results) {
+        for (Result result : results)
+            System.out.println("Player " + result.getPlayerId() + " has "
+                    + result.getPlayerPoint() + " points and "
+                    + result.getPlayerGold() + " golds");
     }
 }

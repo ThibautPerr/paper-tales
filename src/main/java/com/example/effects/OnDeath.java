@@ -64,11 +64,12 @@ public class OnDeath extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (this.resource != null)
             this.resource.printResource();
         if (this.moon != 0)
             System.out.println("Moon: " + this.moon);
+        System.out.println();
     }
 
     @Override

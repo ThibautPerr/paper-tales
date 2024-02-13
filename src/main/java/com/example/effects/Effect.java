@@ -16,7 +16,7 @@ public abstract class Effect {
         this.idCard = idCard;
     }
 
-    protected String getFunction() {
+    public String getFunction() {
         return this.function;
     }
 
@@ -152,8 +152,8 @@ public abstract class Effect {
         player.addMoonOnAnotherUnit(idCard, moon);
     }
 
-    protected void addMoonPerResourceOnAnotherUnit(Player player, Card card, Resource resource, int moon) {
-        player.addMoonPerResourceOnAnotherUnit(card, resource, moon);
+    protected void addMoonPerResourceOnAnotherUnit(Player player, int idCard, Resource resource, int moon) {
+        player.addMoonPerResourceOnAnotherUnit(idCard, resource, moon);
     }
 
     protected void addMoonToAllOtherUnits(Player player, int moon, int idCard) {

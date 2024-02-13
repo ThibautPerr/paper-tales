@@ -3,6 +3,7 @@ package com.example.utils;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -16,22 +17,23 @@ import com.example.Card;
 import com.example.Deck;
 import com.example.Player;
 import com.example.Resource;
+import com.example.Result;
 import com.example.Resource.ResourceType;
 import com.example.strategy.Strategy;
 
 public abstract class Utils {
     public static final boolean PRINT_START_PHASE_1 = false;
-    public static final boolean PRINT_END_PHASE_1 = true;
+    public static final boolean PRINT_END_PHASE_1 = false;
     public static final boolean PRINT_START_PHASE_2 = false;
-    public static final boolean PRINT_END_PHASE_2 = true;
+    public static final boolean PRINT_END_PHASE_2 = false;
     public static final boolean PRINT_START_PHASE_3 = false;
-    public static final boolean PRINT_END_PHASE_3 = true;
+    public static final boolean PRINT_END_PHASE_3 = false;
     public static final boolean PRINT_START_PHASE_4 = false;
-    public static final boolean PRINT_END_PHASE_4 = true;
+    public static final boolean PRINT_END_PHASE_4 = false;
     public static final boolean PRINT_START_PHASE_5 = false;
-    public static final boolean PRINT_END_PHASE_5 = true;
+    public static final boolean PRINT_END_PHASE_5 = false;
     public static final boolean PRINT_START_PHASE_6 = false;
-    public static final boolean PRINT_END_PHASE_6 = true;
+    public static final boolean PRINT_END_PHASE_6 = false;
 
     public static List<Card> createCards() {
         JSONParser parser = new JSONParser();
@@ -75,10 +77,8 @@ public abstract class Utils {
         List<List<Card>> cardsSet = new ArrayList<>();
         for (int i = 0; i < players.size(); i++) {
             List<Card> cards = new ArrayList<Card>();
-            for (int j = 0; j < 5; j++) {
-                cards.add(deck.getDeck().get(0));
-                deck.getDeck().remove(0);
-            }
+            for (int j = 0; j < 5; j++)
+                cards.add(deck.getFirstCard());
             cardsSet.add(cards);
         }
 
@@ -333,15 +333,22 @@ public abstract class Utils {
     // The player with the most points wins
     // If there is a tie, the player with the most gold wins
     // If there is still a tie, the players share the victory
-    public static void endGame(List<Player> players) {
+    public static List<Result> endGame(List<Player> players) {
         for (Player player : players) {
             player.playEndGameEffects();
             player.addPointFromBuildings();
         }
 
-        players.stream().sorted((p1, p2) -> p2.getPoint() - p1.getPoint())
-                .forEach(player -> System.out.println("Player "
-                        + player.getId() + " has " + player.getPoint() + " points and "
-                        + player.getResourceByResourceType(ResourceType.GOLD).getQuantity() + " golds"));
+        List<Result> results = new ArrayList<Result>();
+        for (Player player : players) {
+            results.add(new Result(player.getId(), player.getPoint(),
+                    player.getResourceByResourceType(ResourceType.GOLD).getQuantity()));
+        }
+        results.sort(Comparator.comparing(Result::getPlayerPoint)
+                .thenComparing(Result::getPlayerGold));
+        for (int i = 0; i < results.size(); i++) {
+            results.get(i).setPlayerPlace(results.size() - i);
+        }
+        return results;
     }
 }

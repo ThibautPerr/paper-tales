@@ -93,7 +93,7 @@ public class OnPhase4 extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass().getSimpleName() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (this.moon != 0)
             System.out.print("Moon: " + this.moon);
         if (this.resource != null)
@@ -103,6 +103,7 @@ public class OnPhase4 extends Effect {
             System.out.print(", ");
             this.perResource.printResource();
         }
+        System.out.println();
     }
 
     @Override

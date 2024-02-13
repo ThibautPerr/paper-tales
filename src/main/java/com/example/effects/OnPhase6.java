@@ -68,11 +68,12 @@ public class OnPhase6 extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass().getSimpleName() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (this.moon != 0)
             System.out.println("Moon: " + this.moon);
         if (this.point != 0)
             System.out.println("Point: " + this.point);
+        System.out.println();
     }
 
     @Override

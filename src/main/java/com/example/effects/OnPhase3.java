@@ -129,7 +129,7 @@ public class OnPhase3 extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (this.point != 0)
             System.out.println("Point: " + this.point);
         if (this.resource != null)
@@ -138,6 +138,7 @@ public class OnPhase3 extends Effect {
             System.out.println("MinAttack: " + this.minAttack);
         if (this.moon != 0)
             System.out.println("Moon: " + this.moon);
+        System.out.println();
     }
 
     @Override

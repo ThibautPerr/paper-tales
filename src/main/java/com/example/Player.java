@@ -255,7 +255,7 @@ public class Player {
         if (this.effects.stream().filter(effect -> effect instanceof OnPhase5).map(effect -> (OnPhase5) effect)
                 .anyMatch(effect -> effect.getFunction().equals("payGoldInsteadOfResource")))
             return null;
-        else if (effects.stream().filter(effect -> effect instanceof OnPhase5).map(effect -> (OnPhase5) effect)
+        else if (this.effects.stream().filter(effect -> effect instanceof OnPhase5).map(effect -> (OnPhase5) effect)
                 .anyMatch(effect -> effect.getFunction().equals("payGoldInsteadOfResources")))
             return null;
         else
@@ -334,8 +334,8 @@ public class Player {
         addMoon(idCard, moon);
     }
 
-    public void addMoonPerResourceOnAnotherUnit(Card card, Resource resource, int moon) {
-        addMoon(card.getId(),
+    public void addMoonPerResourceOnAnotherUnit(int idCard, Resource resource, int moon) {
+        addMoon(idCard,
                 (getResourceByResourceType(resource.getResourceType()).getQuantity() / resource.getQuantity())
                         * moon);
     }
@@ -360,10 +360,12 @@ public class Player {
         Card changeformCard = getCardInBoardById(idChangeform);
         if (this.board.isPresentBackCard(idChangeform)) {
             this.board.removeBackCard(changeformCard);
+            this.removeEffectsByCardId(idChangeform);
             this.board.addBackCard(card);
             this.playOnFlipEffect(card, null);
         } else if (this.board.isPresentFrontCard(idChangeform)) {
             this.board.removeFrontCard(changeformCard);
+            this.removeEffectsByCardId(idChangeform);
             this.board.addFrontCard(card);
             this.playOnFlipEffect(card, null);
         } else
@@ -671,37 +673,33 @@ public class Player {
     }
 
     public void playOnFlipEffect(Card card, Deck deck) {
-        for (Effect effect : card.getEffects()) {
-            if (effect instanceof OnFlip && ((OnFlip) effect).getFunction().equals("changeform")) {
-                ((OnFlip) effect).changeform(this, deck.getFirstCard());
+        if (card.getEffects().size() > 0) {
+            for (Effect effect : card.getEffects()) {
+                if (effect instanceof OnFlip) {
+                    if (((OnFlip) effect).getFunction().equals("changeform"))
+                        ((OnFlip) effect).changeform(this, deck.getFirstCard());
+                    else if (((OnFlip) effect).getFunction().equals("addMoonOnAnotherUnit"))
+                        ((OnFlip) effect).addMoonOnAnotherUnit(this, this.strategy.chooseUnitToAddMoon(this));
+                    else
+                        ((OnFlip) effect).playEffect(this);
+                } else
+                    this.addEffect(effect);
+
+                if (effect instanceof OnUpdate
+                        && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit")) {
+                    ((OnUpdate) effect).addResourceIfFrontUnit(this);
+                }
             }
         }
-
-        for (Effect effect : card.getEffects()) {
-            if (effect instanceof OnFlip) {
-                if (((OnFlip) effect).getFunction().equals("addMoonOnAnotherUnit"))
-                    ((OnFlip) effect).addMoonOnAnotherUnit(this, this.board.getCards().get(0).getId());
-                else
-                    ((OnFlip) effect).playEffect(this);
-            } else
-                this.addEffect(effect);
-
-            if (effect instanceof OnUpdate
-                    && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit")) {
-                ((OnUpdate) effect).addResourceIfFrontUnit(this);
-            }
-        }
-
     }
 
     public void playPhase2Effects() {
         for (Effect effect : this.effects) {
             if (effect instanceof OnPhase2) {
-                OnPhase2 onPhase2Effect = (OnPhase2) effect;
-                if (onPhase2Effect.getFunction().equals("addMoonPerResourceOnAnotherUnit"))
-                    onPhase2Effect.addMoonPerResourceOnAnotherUnit(this, this.board.getCards().get(0));
+                if (((OnPhase2) effect).getFunction().equals("addMoonPerResourceOnAnotherUnit"))
+                    ((OnPhase2) effect).addMoonPerResourceOnAnotherUnit(this, this.strategy.chooseUnitToAddMoon(this));
                 else
-                    onPhase2Effect.playEffect(this);
+                    ((OnPhase2) effect).playEffect(this);
             }
         }
     }
@@ -709,9 +707,8 @@ public class Player {
     public void playPhase3Effects() {
         for (Effect effect : this.effects) {
             if (effect instanceof OnPhase3) {
-                OnPhase3 onPhase3Effect = (OnPhase3) effect;
-                if (!onPhase3Effect.getFunction().equals("payGoldInsteadOfResources"))
-                    onPhase3Effect.playEffect(this);
+                if (!((OnPhase3) effect).getFunction().equals("payGoldInsteadOfResources"))
+                    ((OnPhase3) effect).playEffect(this);
             }
         }
     }
@@ -735,10 +732,9 @@ public class Player {
     public void playPhase5Effects() {
         for (Effect effect : this.effects) {
             if (effect instanceof OnPhase5) {
-                OnPhase5 onPhase5Effect = (OnPhase5) effect;
-                if (!onPhase5Effect.getFunction().equals("payGoldInsteadOfResource")
-                        && !onPhase5Effect.getFunction().equals("payGoldInsteadOfResources"))
-                    onPhase5Effect.playEffect(this);
+                if (!((OnPhase5) effect).getFunction().equals("payGoldInsteadOfResource")
+                        && !((OnPhase5) effect).getFunction().equals("payGoldInsteadOfResources"))
+                    ((OnPhase5) effect).playEffect(this);
             }
         }
     }
@@ -746,9 +742,8 @@ public class Player {
     public void playPhase6Effects() {
         for (Effect effect : this.effects) {
             if (effect instanceof OnPhase6) {
-                OnPhase6 onPhase6Effect = (OnPhase6) effect;
-                if (!onPhase6Effect.getFunction().equals("avoidDeathForOneUnitWithMoon"))
-                    onPhase6Effect.playEffect(this);
+                if (!((OnPhase6) effect).getFunction().equals("avoidDeathForOneUnitWithMoon"))
+                    ((OnPhase6) effect).playEffect(this);
             }
         }
     }
@@ -783,11 +778,10 @@ public class Player {
                 .filter(effect -> effect instanceof OnPhase6).map(effect -> (OnPhase6) effect)
                 .filter(effect -> effect.getFunction().equals("avoidDeathForOneUnitWithMoon")).toList();
         if (avoidDeathForOneUnitWithMoonEffects.size() > 0) {
-            int i = 0;
             for (OnPhase6 effect : avoidDeathForOneUnitWithMoonEffects) {
-                effect.avoidDeathForOneUnitWithMoon(this, this.board.getCards().stream()
-                        .filter(card -> card.getMoon() >= 0 && !card.isAvoidDeath()).toList().get(i));
-                i++;
+                Card card = this.strategy.chooseCardToAvoidDeath(this);
+                if (card != null)
+                    effect.avoidDeathForOneUnitWithMoon(this, card);
             }
         }
     }

@@ -69,11 +69,12 @@ public class OnEndPhase3 extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (point != 0)
             System.out.println("Point: " + this.point);
         if (this.resource != null)
             this.resource.printResource();
+        System.out.println();
     }
 
     @Override

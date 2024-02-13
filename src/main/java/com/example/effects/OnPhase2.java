@@ -1,6 +1,5 @@
 package com.example.effects;
 
-import com.example.Card;
 import com.example.Player;
 import com.example.Resource;
 
@@ -33,8 +32,8 @@ public class OnPhase2 extends Effect {
         return super.getFunction();
     }
 
-    public void addMoonPerResourceOnAnotherUnit(Player player, Card card) {
-        super.addMoonPerResourceOnAnotherUnit(player, card, this.resource, this.moon);
+    public void addMoonPerResourceOnAnotherUnit(Player player, int idCard) {
+        super.addMoonPerResourceOnAnotherUnit(player, idCard, this.resource, this.moon);
     }
 
     public void cannotFightIfAtLeastMoon(Player player) {
@@ -55,11 +54,12 @@ public class OnPhase2 extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (this.resource != null)
             this.resource.printResource();
         if (this.moon != 0)
             System.out.print(", moon " + this.moon);
+        System.out.println();
     }
 
     @Override

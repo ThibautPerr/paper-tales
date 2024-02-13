@@ -58,11 +58,12 @@ public class OnPhase5 extends Effect {
 
     @Override
     public void printEffect() {
-        System.out.println("\nEffect: type " + getClass() + ", function " + getFunction());
+        System.out.println("Effect: type " + getClass().getSimpleName() + ", function " + getFunction());
         if (this.gold != 0)
             System.out.println("Gold: " + this.gold);
         if (this.resource != null)
             this.resource.printResource();
+        System.out.println();
     }
 
     @Override

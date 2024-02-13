@@ -122,8 +122,10 @@ public class Card {
         System.out.println("Card: " + this.name + " (id: " + this.id + ")");
         System.out.println("Cost: " + this.cost);
         System.out.println("Attack: " + this.attack + "\n");
+        System.out.println("Moon: " + this.moon);
         for (Effect effect : this.effects) {
             effect.printEffect();
         }
+        System.out.println();
     }
 }
