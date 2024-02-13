@@ -839,7 +839,7 @@
         "effects": [
             {
                 "type": "OnPhase3",
-                "function": "addWarpointPerMoon",
+                "function": "addWarpointPerMoonOnEveryUnit",
                 "point": 1,
                 "moon": 1
             },

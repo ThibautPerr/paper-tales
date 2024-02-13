@@ -176,6 +176,9 @@ public abstract class JSONUtils {
                     case "addWarpointPerMoon":
                         return new OnPhase3(idCard, ((Long) jsonEffect.get("point")).intValue(),
                                 ((Long) jsonEffect.get("moon")).intValue(), function);
+                    case "addWarpointPerMoonOnEveryUnit":
+                        return new OnPhase3(idCard, ((Long) jsonEffect.get("point")).intValue(),
+                                ((Long) jsonEffect.get("moon")).intValue(), function);
                     case "addWarpointPerAtLeastMoon":
                         return new OnPhase3(idCard, ((Long) jsonEffect.get("point")).intValue(),
                                 ((Long) jsonEffect.get("moon")).intValue(), function);

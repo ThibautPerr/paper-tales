@@ -85,7 +85,7 @@ public abstract class Utils {
         // Each player picks one, and pass it to the next player
         for (int i = 0; i < cardsSet.size(); i++) {
             List<Card> cardSetCopy = new ArrayList<>(cardsSet.get(i));
-            for (int j = 0; j < cardsSet.size(); j++) {
+            for (int j = 0; j < cardsSet.get(i).size(); j++) {
                 Player player = players.get((i + j) % players.size());
                 Card card = player.getStrategy().pickCard(player, cardSetCopy);
                 player.addCardToHand(card);

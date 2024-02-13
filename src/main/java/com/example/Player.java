@@ -395,6 +395,12 @@ public class Player {
             this.warPoint += (getCardInBoardById(idCard).getMoon() * warPoint * moon);
     }
 
+    public void addWarpointPerMoonOnEveryUnit(int warPoint, int moon) {
+        for (Card card : this.board.getCards()) {
+            this.warPoint += (card.getMoon() * warPoint * moon);
+        }
+    }
+
     public void addWarpointPerAtLeastMoon(int idCard, int warPoint, int moon) {
         if (this.board.isPresentFrontCard(idCard) || getCardInBoardById(idCard).canFightFromBehind())
             if (getCardInBoardById(idCard).getMoon() >= moon)

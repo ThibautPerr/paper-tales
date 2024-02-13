@@ -64,6 +64,10 @@ public class OnPhase3 extends Effect {
         super.addWarpointPerMoon(player, this.getIdCard(), this.point, this.moon);
     }
 
+    private void addWarpointPerMoonOnEveryUnit(Player player) {
+        super.addWarpointPerMoonOnEveryUnit(player, point, moon);
+    }
+
     private void addWarpointPerAtLeastMoon(Player player) {
         super.addWarpointPerAtLeastMoon(player, this.getIdCard(), this.point, this.moon);
     }
@@ -95,6 +99,9 @@ public class OnPhase3 extends Effect {
                 break;
             case "addWarpointPerMoon":
                 addWarpointPerMoon(player);
+                break;
+            case "addWarpointPerMoonOnEveryUnit":
+                addWarpointPerMoonOnEveryUnit(player);
                 break;
             case "addWarpointPerAtLeastMoon":
                 addWarpointPerAtLeastMoon(player);

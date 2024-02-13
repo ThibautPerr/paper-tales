@@ -124,6 +124,10 @@ public abstract class Effect {
         player.addWarpointPerMoon(idCard, point, moon);
     }
 
+    protected void addWarpointPerMoonOnEveryUnit(Player player, int point, int moon) {
+        player.addWarpointPerMoonOnEveryUnit(point, moon);
+    }
+
     protected void addWarpointPerAtLeastMoon(Player player, int idCard, int point, int moon) {
         player.addWarpointPerAtLeastMoon(idCard, point, moon);
     }
