@@ -17,10 +17,7 @@ import com.example.Deck;
 import com.example.Player;
 import com.example.Resource;
 import com.example.Resource.ResourceType;
-import com.example.effects.Effect;
-import com.example.effects.OnFlip;
-import com.example.effects.OnPhase6;
-import com.example.effects.OnUpdate;
+import com.example.strategy.Strategy;
 
 public abstract class Utils {
     public static final boolean PRINT_START_PHASE_1 = false;
@@ -49,10 +46,10 @@ public abstract class Utils {
         return cards;
     }
 
-    public static List<Player> createPlayers(int numberOfPlayers, boolean[] realPlayers) {
+    public static List<Player> createPlayers(int numberOfPlayers, List<Strategy> strategies) {
         List<Player> players = new ArrayList<Player>();
         for (int i = 0; i < numberOfPlayers; i++) {
-            players.add(new Player(i, realPlayers[i]));
+            players.add(new Player(i, strategies.get(i)));
         }
         return players;
     }
@@ -75,22 +72,24 @@ public abstract class Utils {
             System.out.println("\n--------------- Start phase1 ---------------");
 
         // Each player draws 5 cards
-        List<List<Card>> drewCards = new ArrayList<>();
+        List<List<Card>> cardsSet = new ArrayList<>();
         for (int i = 0; i < players.size(); i++) {
             List<Card> cards = new ArrayList<Card>();
             for (int j = 0; j < 5; j++) {
                 cards.add(deck.getDeck().get(0));
                 deck.getDeck().remove(0);
             }
-            drewCards.add(cards);
+            cardsSet.add(cards);
         }
 
         // Each player picks one, and pass it to the next player
-        int drewCardsSize = drewCards.get(0).size();
-        for (int i = 0; i < drewCardsSize; i++) {
-            for (int j = 0; j < drewCards.size(); j++) {
-                List<Card> cardsSet = drewCards.get((j + i) % drewCards.size());
-                drawCard(players.get(j), cardsSet);
+        for (int i = 0; i < cardsSet.size(); i++) {
+            List<Card> cardSetCopy = new ArrayList<>(cardsSet.get(i));
+            for (int j = 0; j < cardsSet.size(); j++) {
+                Player player = players.get((i + j) % players.size());
+                Card card = player.getStrategy().pickCard(player, cardSetCopy);
+                player.addCardToHand(card);
+                cardSetCopy.remove(card);
             }
         }
 
@@ -104,12 +103,6 @@ public abstract class Utils {
             }
             System.out.println("--------------- End phase1 ---------------");
         }
-    }
-
-    public static void drawCard(Player player, List<Card> cards) {
-        // TODO Create a pick method
-        player.addCardToHand(cards.get(0));
-        cards.remove(0);
     }
 
     public static void phase2(List<Player> players, Deck deck, List<Card> discardPile) {
@@ -128,11 +121,13 @@ public abstract class Utils {
             }
         }
 
-        for (Player player : players)
+        for (Player player : players) {
             player.playPhase2Effects();
-        boardsReorganisation(players);
-        playCards(players, deck);
-        discardCards(players, discardPile);
+            boardReorganisation(player);
+            playCards(player, deck);
+            keepCards(player, discardPile);
+        }
+
         if (PRINT_END_PHASE_2) {
             for (Player player : players) {
                 System.out.print("Player " + player.getId() + " ending hand: ");
@@ -149,93 +144,45 @@ public abstract class Utils {
         }
     }
 
-    public static void boardsReorganisation(List<Player> players) {
-        // TODO Create a reorganisation method
-        // Current : remove every card from the board
-        // If a card with an effect addResourceIfFrontUnit is moved from back to front,
-        // trigger adding effect, else trigger remove
+    public static void boardReorganisation(Player player) {
+        List<Card> cards = player
+                .findCardsWithAddResourceIfFrontUnit(player.getBoard().getCards());
+        player.getStrategy().boardReorganisation(player);
+        player.playCardsWithAddResourceIfFrontUnit(cards);
+    }
 
-        for (Player player : players) {
-            List<Card> cards = player
-                    .findCardsWithAddResourceIfFrontUnit(player.getBoard().getCards());
-            // discardCards(player, player.getBoard().getFrontCards());
-            // discardCards(player, player.getBoard().getBackCards());
-            player.playCardsWithAddResourceIfFrontUnit(cards);
+    public static void playCards(Player player, Deck deck) {
+        Iterator<Card> itFront = (new ArrayList<Card>(player.getStrategy().playFrontCard(player))).iterator();
+        while (itFront.hasNext()) {
+            Card card = itFront.next();
+            if (card.getCost() <= player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
+                    && player.getBoard().getFrontCards().size() < player.getBoard().getMaxFrontCards()) {
+                player.playCardById(card.getId(), true);
+            }
+        }
+
+        Iterator<Card> itBack = (new ArrayList<Card>(player.getStrategy().playBackCards(player))).iterator();
+        while (itBack.hasNext()) {
+            Card card = itBack.next();
+            if (card.getCost() <= player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
+                    && player.getBoard().getBackCards().size() < player.getBoard().getMaxBackCards()) {
+                player.playCardById(card.getId(), false);
+            }
+        }
+
+        turnFlippedCards(player, deck);
+    }
+
+    public static void turnFlippedCards(Player player, Deck deck) {
+        for (Card card : player.getBoard().getCards().stream().filter(card -> card.isFlipped()).toList()) {
+            card.setFlipped(false);
+            player.playOnFlipEffect(card, deck);
         }
     }
 
-    public static void discardCards(Player player, List<Card> cards) {
-        List<Card> copyCards = new ArrayList<>(cards);
-
-        for (Card card : copyCards) {
-            player.playOnDeathEffects();
-
-            // particular case for cards with addResourceIfFrontUnit effect
-            player.discardCardsWithAddResourceIfFrontUnit(
-                    player.findCardsWithAddResourceIfFrontUnit(cards));
-
-            player.removeEffectsByCardId(card.getId());
-            player.getBoard().removeCardById(card.getId());
-        }
-    }
-
-    public static void playCards(List<Player> players, Deck deck) {
-        for (Player player : players) {
-            // TODO Create a play method
-            // Play card if there is space on the front board
-            Iterator<Card> itFront = player.getHand().stream().sorted(
-                    (c1, c2) -> c2.getAttack() - c1.getAttack()).iterator(); // In priority, play cards with most attack
-            while (itFront.hasNext()) {
-                Card card = itFront.next();
-                if (card.getCost() <= player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
-                        && player.getBoard().getFrontCards().size() < player.getBoard().getMaxFrontCards()) {
-                    player.playCardById(card.getId(), true);
-                }
-            }
-
-            // Play card if there is space on the back board
-            Iterator<Card> itBack = player.getHand().stream().sorted(
-                    (c1, c2) -> c2.getAttack() - c1.getAttack()).iterator(); // In priority, play cards with most attack
-            while (itBack.hasNext()) {
-                Card card = itBack.next();
-                if (card.getCost() <= player.getResourceByResourceType(ResourceType.GOLD).getQuantity()
-                        && player.getBoard().getBackCards().size() < player.getBoard().getMaxBackCards()) {
-                    player.playCardById(card.getId(), false);
-                }
-            }
-
-            // Turn flipped cards
-            for (Card card : player.getBoard().getCards().stream().filter(card -> card.isFlipped()).toList()) {
-                card.setFlipped(false);
-                for (Effect effect : card.getEffects()) {
-                    if (effect instanceof OnFlip && ((OnFlip) effect).getFunction().equals("changeform"))
-                        ((OnFlip) effect).changeform(player, deck.getFirstCard());
-                }
-                for (Effect effect : card.getEffects()) {
-                    if (effect instanceof OnFlip)
-                        player.playOnFlipEffect((OnFlip) effect, card);
-                    else
-                        player.addEffect(effect);
-                    if (effect instanceof OnUpdate
-                            && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit")) {
-                        ((OnUpdate) effect).addResourceIfFrontUnit(player);
-                    }
-                }
-            }
-        }
-
-    }
-
-    public static void discardCards(List<Player> players, List<Card> discardPile) {
-        for (Player player : players) {
-            // TODO Create a discard method
-            if (player.getHand().size() > 1) {
-                for (int i = 1; i < player.getHand().size(); i++) {
-                    discardPile.add(player.getHand().get(i));
-                }
-                player.setHand(player.getHand().subList(0, 1));
-            }
-        }
+    public static void keepCards(Player player, List<Card> discardPile) {
+        Card keepCard = player.getStrategy().keepCard(player);
+        player.keepCard(keepCard, discardPile);
     }
 
     public static void phase3(List<Player> players) {
@@ -326,24 +273,11 @@ public abstract class Utils {
 
         for (Player player : players) {
             player.playPhase5Effects();
-            List<BuildingPhase> buildableBuildingPhases = player.getBuildableBuildingPhases();
-
-            // TODO : Create a build BuildingPhase method
-            int i = 0;
-            boolean built = false;
-            while (!built && i < buildableBuildingPhases.size()) {
-                BuildingPhase buildingPhase = buildableBuildingPhases.get(i);
-
+            BuildingPhase buildingPhase = player.getStrategy().build(player, player.getBuildablePhases());
+            if (buildingPhase != null) {
                 List<Resource> paidResources = player.payResources(buildingPhase);
-
-                if (player.hasEnoughResources(buildingPhase.getRequirements())
-                        || player.hasEnoughResources(buildingPhase.getOptionnalRequirements())
-                        || player.isIgnoreBuildingCost()) {
-                    player.buildBuildingPhase(buildingPhase, player.builtWithGold(buildingPhase));
-                    built = true;
-                    player.deletePaidResources(paidResources);
-                }
-                i++;
+                player.buildBuildingPhase(buildingPhase, player.builtWithGold(buildingPhase));
+                player.deletePaidResources(paidResources);
             }
         }
 
@@ -368,13 +302,13 @@ public abstract class Utils {
             }
 
             player.playPhase6Effects();
-            playAvoidDeathForOneUnitWithMoon(player);
+            player.playAvoidDeathForOneUnitWithMoon();
 
             List<Card> cards = player.getBoard().getCards();
             for (Card card : cards) {
                 if (card.getMoon() > 0) {
-                    player.playOnPhase6DeathEffects();
-                    player.playOnDeathEffects();
+                    player.playOnPhase6DeathEffects(card);
+                    player.playOnDeathEffects(card);
                     player.discardCardWithAddResourceIfFrontUnit(card);
                     player.removeEffectsByCardId(card.getId());
                     player.getBoard().removeCardById(card.getId());
@@ -391,20 +325,6 @@ public abstract class Utils {
         }
         if (PRINT_END_PHASE_6)
             System.out.println("--------------- End phase6 ---------------");
-    }
-
-    public static void playAvoidDeathForOneUnitWithMoon(Player player) {
-        List<OnPhase6> avoidDeathForOneUnitWithMoonEffects = player.getEffects().stream()
-                .filter(effect -> effect instanceof OnPhase6).map(effect -> (OnPhase6) effect)
-                .filter(effect -> effect.getFunction().equals("avoidDeathForOneUnitWithMoon")).toList();
-        if (avoidDeathForOneUnitWithMoonEffects.size() > 0) {
-            int i = 0;
-            for (OnPhase6 effect : avoidDeathForOneUnitWithMoonEffects) {
-                effect.avoidDeathForOneUnitWithMoon(player, player.getBoard().getCards().stream()
-                        .filter(card -> card.getMoon() >= 0 && !card.isAvoidDeath()).toList().get(i));
-                i++;
-            }
-        }
     }
 
     // Trigger end game effects

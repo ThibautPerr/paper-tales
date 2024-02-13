@@ -37,7 +37,7 @@ public class OnPhase2 extends Effect {
         super.addMoonPerResourceOnAnotherUnit(player, card, this.resource, this.moon);
     }
 
-    private void cannotFightIfAtLeastMoon(Player player) {
+    public void cannotFightIfAtLeastMoon(Player player) {
         super.cannotFightIfAtLeastMoon(player, getIdCard(), this.moon);
     }
 

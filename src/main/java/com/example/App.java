@@ -4,6 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.Resource.ResourceType;
+import com.example.strategy.Strategy;
+import com.example.strategy.boardReorganisation.NaiveBoardReorganisation;
+import com.example.strategy.build.NaiveBuild;
+import com.example.strategy.build.RandomBuild;
+import com.example.strategy.keepCard.NaiveKeepCard;
+import com.example.strategy.boardReorganisation.DiscardAllBoardReorganisation;
+import com.example.strategy.pickCard.NaivePickCard;
+import com.example.strategy.playCard.NaivePlayCard;
 import com.example.utils.Utils;
 
 public class App {
@@ -12,8 +20,34 @@ public class App {
         Deck deck = new Deck(Utils.createCards());
         deck.shuffle();
         List<Card> discardPile = new ArrayList<Card>();
-        boolean[] realPlayers = { true, false, false, false };
-        List<Player> players = Utils.createPlayers(4, realPlayers);
+
+        List<Strategy> strategies = new ArrayList<Strategy>();
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new NaiveBoardReorganisation(),
+                new NaivePlayCard(),
+                new NaiveKeepCard(),
+                new NaiveBuild()));
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new NaiveBoardReorganisation(),
+                new NaivePlayCard(),
+                new NaiveKeepCard(),
+                new RandomBuild()));
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new DiscardAllBoardReorganisation(),
+                new NaivePlayCard(),
+                new NaiveKeepCard(),
+                new NaiveBuild()));
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new DiscardAllBoardReorganisation(),
+                new NaivePlayCard(),
+                new NaiveKeepCard(),
+                new RandomBuild()));
+        List<Player> players = Utils.createPlayers(strategies.size(), strategies);
+
         List<Building> buildings = Utils.createBuildings();
         for (Player player : players) {
             player.setBuildings(buildings);
