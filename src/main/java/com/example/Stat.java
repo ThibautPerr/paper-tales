@@ -27,10 +27,10 @@ public class Stat {
     }
 
     public float averagePlace() {
-        return (float) this.playerPlaces.stream().mapToInt(Integer::intValue).sum() / this.gamesPlayed;
+        return (float) this.playerPlaces.stream().mapToInt(Integer::intValue).average().getAsDouble();
     }
 
     public float averagePoints() {
-        return (float) this.playerPoints.stream().mapToInt(Integer::intValue).sum() / this.gamesPlayed;
+        return (float) this.playerPoints.stream().mapToInt(Integer::intValue).average().getAsDouble();
     }
 }

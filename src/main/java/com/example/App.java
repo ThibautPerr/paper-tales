@@ -2,6 +2,7 @@ package com.example;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import com.example.Resource.ResourceType;
 import com.example.strategy.Strategy;
@@ -20,14 +21,15 @@ import com.example.utils.Utils;
 
 public class App {
     public static void main(String[] args) {
-        int gamesPlayed = 1000;
+        Utils.setStartLogs(false);
+        Utils.setEndLogs(true);
+        int gamesPlayed = 1;
 
         List<Strategy> strategies = createStrategies();
 
         List<Stat> stats = new ArrayList<Stat>();
-        for (int i = 0; i < strategies.size(); i++) {
-            stats.add(new Stat(i));
-        }
+        IntStream.range(0, strategies.size())
+                .forEachOrdered(i -> stats.add(new Stat(i)));
 
         for (int i = 0; i < gamesPlayed; i++) {
             List<Player> players = Utils.createPlayers(strategies.size(), strategies);
@@ -106,15 +108,16 @@ public class App {
     }
 
     public static List<Result> playGame(List<Player> players, Deck deck, List<Card> discardPile) {
-        // System.out.println("----------------- Game -----------------");
-        for (int i = 0; i < 4; i++) {
+        System.out.println("----------------- Game -----------------");
+        IntStream.range(0, 4).forEachOrdered(i -> {
+            System.out.println("----------------- Turn " + (i + 1) + " -----------------");
             Utils.phase1(players, deck);
             Utils.phase2(players, deck, discardPile);
             Utils.phase3(players);
             Utils.phase4(players);
             Utils.phase5(players);
             Utils.phase6(players, discardPile);
-        }
+        });
         return Utils.endGame(players);
     }
 

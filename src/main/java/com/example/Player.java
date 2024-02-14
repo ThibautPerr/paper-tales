@@ -596,18 +596,14 @@ public class Player {
     }
 
     public void keepCard(Card card, List<Card> discardPile) {
-        if (this.hand.size() > 0) {
-            List<Card> newCards = new ArrayList<Card>(this.hand);
-            for (Card handCard : newCards)
-                if (card != null) {
-                    if (handCard.getId() != card.getId()) {
+        if (!this.hand.isEmpty()) {
+            List<Card> newHand = new ArrayList<Card>(this.hand);
+            newHand.stream()
+                    .filter(handCard -> card == null || handCard.getId() != card.getId())
+                    .forEach(handCard -> {
                         discardPile.add(handCard);
                         this.hand.remove(handCard);
-                    }
-                } else {
-                    discardPile.add(handCard);
-                    this.hand.remove(handCard);
-                }
+                    });
         }
     }
 

@@ -22,18 +22,36 @@ import com.example.Resource.ResourceType;
 import com.example.strategy.Strategy;
 
 public abstract class Utils {
-    public static final boolean PRINT_START_PHASE_1 = false;
-    public static final boolean PRINT_END_PHASE_1 = false;
-    public static final boolean PRINT_START_PHASE_2 = false;
-    public static final boolean PRINT_END_PHASE_2 = false;
-    public static final boolean PRINT_START_PHASE_3 = false;
-    public static final boolean PRINT_END_PHASE_3 = false;
-    public static final boolean PRINT_START_PHASE_4 = false;
-    public static final boolean PRINT_END_PHASE_4 = false;
-    public static final boolean PRINT_START_PHASE_5 = false;
-    public static final boolean PRINT_END_PHASE_5 = false;
-    public static final boolean PRINT_START_PHASE_6 = false;
-    public static final boolean PRINT_END_PHASE_6 = false;
+    public static boolean LOG_START_PHASE_1;
+    public static boolean LOG_END_PHASE_1;
+    public static boolean LOG_START_PHASE_2;
+    public static boolean LOG_END_PHASE_2;
+    public static boolean LOG_START_PHASE_3;
+    public static boolean LOG_END_PHASE_3;
+    public static boolean LOG_START_PHASE_4;
+    public static boolean LOG_END_PHASE_4;
+    public static boolean LOG_START_PHASE_5;
+    public static boolean LOG_END_PHASE_5;
+    public static boolean LOG_START_PHASE_6;
+    public static boolean LOG_END_PHASE_6;
+
+    public static void setStartLogs(boolean value) {
+        LOG_START_PHASE_1 = value;
+        LOG_START_PHASE_2 = value;
+        LOG_START_PHASE_3 = value;
+        LOG_START_PHASE_4 = value;
+        LOG_START_PHASE_5 = value;
+        LOG_START_PHASE_6 = value;
+    }
+
+    public static void setEndLogs(boolean value) {
+        LOG_END_PHASE_1 = value;
+        LOG_END_PHASE_2 = value;
+        LOG_END_PHASE_3 = value;
+        LOG_END_PHASE_4 = value;
+        LOG_END_PHASE_5 = value;
+        LOG_END_PHASE_6 = value;
+    }
 
     public static List<Card> createCards() {
         JSONParser parser = new JSONParser();
@@ -70,7 +88,7 @@ public abstract class Utils {
     }
 
     public static void phase1(List<Player> players, Deck deck) {
-        if (PRINT_START_PHASE_1)
+        if (LOG_START_PHASE_1)
             System.out.println("\n--------------- Start phase1 ---------------");
 
         // Each player draws 5 cards
@@ -93,7 +111,7 @@ public abstract class Utils {
             }
         }
 
-        if (PRINT_END_PHASE_1) {
+        if (LOG_END_PHASE_1) {
             for (Player player : players) {
                 System.out.print("Player " + player.getId() + " hand: ");
                 for (Card card : player.getHand()) {
@@ -106,7 +124,7 @@ public abstract class Utils {
     }
 
     public static void phase2(List<Player> players, Deck deck, List<Card> discardPile) {
-        if (PRINT_START_PHASE_2) {
+        if (LOG_START_PHASE_2) {
             System.out.println("\n--------------- Start phase2 ---------------");
             for (Player player : players) {
                 System.out.print("Player " + player.getId() + " starting hand: ");
@@ -128,7 +146,7 @@ public abstract class Utils {
             keepCards(player, discardPile);
         }
 
-        if (PRINT_END_PHASE_2) {
+        if (LOG_END_PHASE_2) {
             for (Player player : players) {
                 System.out.print("Player " + player.getId() + " ending hand: ");
                 for (Card card : player.getHand()) {
@@ -186,12 +204,12 @@ public abstract class Utils {
     }
 
     public static void phase3(List<Player> players) {
-        if (PRINT_START_PHASE_3)
+        if (LOG_START_PHASE_3)
             System.out.println("\n--------------- Start phase3 ---------------");
 
         for (Player player : players) {
-            if (PRINT_START_PHASE_3) {
-                System.out.println("Player " + player.getId() + " starting board: ");
+            if (LOG_START_PHASE_3) {
+                System.out.println("Player " + player.getId() + " board: ");
                 player.getBoard().printBoard();
                 System.out.println("Player " + player.getId() + " points : " + player.getPoint());
             }
@@ -226,7 +244,7 @@ public abstract class Utils {
             player.playOnEndPhase3Effects();
         }
 
-        if (PRINT_END_PHASE_3) {
+        if (LOG_END_PHASE_3) {
             for (Player player : players) {
                 System.out.println("Player " + player.getId() + " war points: " + player.getWarPoint() + ", points : "
                         + player.getPoint());
@@ -236,10 +254,10 @@ public abstract class Utils {
     }
 
     public static void phase4(List<Player> players) {
-        if (PRINT_START_PHASE_4)
+        if (LOG_START_PHASE_4)
             System.out.println("\n--------------- Start phase4 ---------------");
 
-        if (PRINT_START_PHASE_4)
+        if (LOG_START_PHASE_4)
             for (Player player : players)
                 System.out.println("Player " + player.getId() + " gold: "
                         + player.getResourceByResourceType(ResourceType.GOLD).getQuantity());
@@ -252,20 +270,20 @@ public abstract class Utils {
             player.setGoldToAddInPhase4(2);
         }
 
-        if (PRINT_END_PHASE_4)
+        if (LOG_END_PHASE_4)
             for (Player player : players) {
                 player.printResources();
             }
 
-        if (PRINT_END_PHASE_4)
+        if (LOG_END_PHASE_4)
             System.out.println("--------------- End phase4 ---------------");
     }
 
     public static void phase5(List<Player> players) {
-        if (PRINT_START_PHASE_5)
+        if (LOG_START_PHASE_5)
             System.out.println("\n--------------- Start phase5 ---------------");
 
-        if (PRINT_START_PHASE_5)
+        if (LOG_START_PHASE_5)
             for (Player player : players) {
                 player.printBuiltBuildings();
                 player.printResources();
@@ -281,22 +299,22 @@ public abstract class Utils {
             }
         }
 
-        if (PRINT_END_PHASE_5)
+        if (LOG_END_PHASE_5)
             for (Player player : players) {
                 player.printBuiltBuildings();
                 System.out.println("Player " + player.getId() + " gold: "
                         + player.getResourceByResourceType(ResourceType.GOLD).getQuantity());
             }
 
-        if (PRINT_END_PHASE_5)
+        if (LOG_END_PHASE_5)
             System.out.println("--------------- End phase5 ---------------");
     }
 
     public static void phase6(List<Player> players, List<Card> discardPile) {
-        if (PRINT_START_PHASE_6)
+        if (LOG_START_PHASE_6)
             System.out.println("\n--------------- Start phase6 ---------------");
         for (Player player : players) {
-            if (PRINT_START_PHASE_6) {
+            if (LOG_START_PHASE_6) {
                 System.out.println("Player " + player.getId() + " starting board: ");
                 player.getBoard().printBoard();
             }
@@ -318,12 +336,12 @@ public abstract class Utils {
             for (Card card : player.getBoard().getCards())
                 player.addMoon(card.getId(), 1);
 
-            if (PRINT_END_PHASE_6) {
+            if (LOG_END_PHASE_6) {
                 System.out.println("Player " + player.getId() + " ending board: ");
                 player.getBoard().printBoard();
             }
         }
-        if (PRINT_END_PHASE_6)
+        if (LOG_END_PHASE_6)
             System.out.println("--------------- End phase6 ---------------");
     }
 
@@ -339,16 +357,15 @@ public abstract class Utils {
             player.addPointFromBuildings();
         }
 
-        List<Result> results = new ArrayList<Result>();
-        for (Player player : players) {
-            results.add(new Result(player.getId(), player.getPoint(),
-                    player.getResourceByResourceType(ResourceType.GOLD).getQuantity()));
-        }
-        results.sort(Comparator.comparing(Result::getPlayerPoint)
-                .thenComparing(Result::getPlayerGold));
-        for (int i = 0; i < results.size(); i++) {
-            results.get(i).setPlayerPlace(results.size() - i);
-        }
+        List<Result> results = players.stream()
+                .map(player -> new Result(player.getId(), player.getPoint(),
+                        player.getResourceByResourceType(ResourceType.GOLD).getQuantity()))
+                .sorted(Comparator.comparing(Result::getPlayerPoint)
+                        .thenComparing(Result::getPlayerGold))
+                .toList();
+
+        results.stream().forEachOrdered(result -> result.setPlayerPlace(results.size() - results.indexOf(result)));
+        
         return results;
     }
 }
