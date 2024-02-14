@@ -322,19 +322,20 @@ public abstract class Utils {
             player.playPhase6Effects();
             player.playAvoidDeathForOneUnitWithMoon();
 
-            List<Card> cards = player.getBoard().getCards();
-            for (Card card : cards) {
-                if (card.getMoon() > 0) {
-                    player.playOnPhase6DeathEffects(card);
-                    player.playOnDeathEffects(card);
-                    player.discardCardWithAddResourceIfFrontUnit(card);
-                    player.removeEffectsByCardId(card.getId());
-                    player.getBoard().removeCardById(card.getId());
-                }
-            }
+            player.getBoard().getCards().stream()
+                    .filter(card -> card.getMoon() > 0 && !card.isAvoidDeath())
+                    .forEach(card -> {
+                        player.playOnPhase6DeathEffects(card);
+                        player.playOnDeathEffects(card);
+                        player.discardCardWithAddResourceIfFrontUnit(card);
+                        player.removeEffectsByCardId(card.getId());
+                        player.getBoard().removeCardById(card.getId());
+                    });
 
-            for (Card card : player.getBoard().getCards())
+            player.getBoard().getCards().stream().forEach(card -> {
                 player.addMoon(card.getId(), 1);
+                card.setAvoidDeath(false);
+            });
 
             if (LOG_END_PHASE_6) {
                 System.out.println("Player " + player.getId() + " ending board: ");
@@ -365,7 +366,7 @@ public abstract class Utils {
                 .toList();
 
         results.stream().forEachOrdered(result -> result.setPlayerPlace(results.size() - results.indexOf(result)));
-        
+
         return results;
     }
 }

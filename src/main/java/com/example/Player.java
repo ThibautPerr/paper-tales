@@ -661,7 +661,7 @@ public class Player {
     }
 
     public void discardCardWithAddResourceIfFrontUnit(Card card) {
-        if (this.board.isPresentBackCard(card.getId()))
+        if (this.board.isPresentFrontCard(card.getId()))
             for (Effect effect : card.getEffects())
                 if (effect instanceof OnUpdate
                         && ((OnUpdate) effect).getFunction().equals("removeResourceIfFrontUnit"))
@@ -771,7 +771,8 @@ public class Player {
 
     public void playAvoidDeathForOneUnitWithMoon() {
         List<OnPhase6> avoidDeathForOneUnitWithMoonEffects = this.effects.stream()
-                .filter(effect -> effect instanceof OnPhase6).map(effect -> (OnPhase6) effect)
+                .filter(effect -> effect instanceof OnPhase6)
+                .map(effect -> (OnPhase6) effect)
                 .filter(effect -> effect.getFunction().equals("avoidDeathForOneUnitWithMoon")).toList();
         if (avoidDeathForOneUnitWithMoonEffects.size() > 0) {
             for (OnPhase6 effect : avoidDeathForOneUnitWithMoonEffects) {
