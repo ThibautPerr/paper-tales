@@ -22,8 +22,8 @@ import com.example.utils.Utils;
 public class App {
     public static void main(String[] args) {
         int gamesPlayed = args.length > 0 ? Integer.parseInt(args[0]) : 1;
-        Utils.setStartLogs(args.length > 1 && args[1].equals("true"));
-        Utils.setEndLogs(args.length > 2 && args[2].equals("true"));
+        Utils.setStartLogs(args.length > 1 && gamesPlayed == 1 && args[1].equals("true"));
+        Utils.setEndLogs(args.length > 2 && gamesPlayed == 1 && args[2].equals("true"));
 
         List<Strategy> strategies = createStrategies();
 
@@ -47,10 +47,11 @@ public class App {
             }
 
             // ------------- Play the game ------------
-            List<Result> results = playGame(players, deck, discardPile);
+            List<Result> results = playGame(players, deck, discardPile, gamesPlayed);
 
             // ------------- Print results ------------
-            // printGameResult(results);
+            if (gamesPlayed == 1)
+                printGameResult(results);
 
             // ------------- Compute stats ------------
             for (Player player : players) {
@@ -107,10 +108,10 @@ public class App {
         return strategies;
     }
 
-    public static List<Result> playGame(List<Player> players, Deck deck, List<Card> discardPile) {
-        System.out.println("----------------- Game -----------------");
+    public static List<Result> playGame(List<Player> players, Deck deck, List<Card> discardPile, int gamesPlayed) {
         IntStream.range(0, 4).forEachOrdered(i -> {
-            System.out.println("----------------- Turn " + (i + 1) + " -----------------");
+            if (gamesPlayed == 1)
+                System.out.println("----------------- Turn " + (i + 1) + " -----------------");
             Utils.phase1(players, deck);
             Utils.phase2(players, deck, discardPile);
             Utils.phase3(players);
