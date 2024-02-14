@@ -20,8 +20,10 @@ import com.example.strategy.playCard.PlayStrongCard;
 import com.example.utils.Utils;
 
 public class App {
+    private static int gamesPlayed;
+
     public static void main(String[] args) {
-        int gamesPlayed = args.length > 0 ? Integer.parseInt(args[0]) : 1;
+        gamesPlayed = args.length > 0 ? Integer.parseInt(args[0]) : 1;
         Utils.setStartLogs(args.length > 1 && gamesPlayed == 1 && args[1].equals("true"));
         Utils.setEndLogs(args.length > 2 && gamesPlayed == 1 && args[2].equals("true"));
 
@@ -47,7 +49,7 @@ public class App {
             }
 
             // ------------- Play the game ------------
-            List<Result> results = playGame(players, deck, discardPile, gamesPlayed);
+            List<Result> results = playGame(players, deck, discardPile);
 
             // ------------- Print results ------------
             if (gamesPlayed == 1)
@@ -62,12 +64,8 @@ public class App {
             }
         }
 
-        for (Stat stat : stats) {
-            System.out.println("Player " + stat.getPlayerId() + " has played " +
-                    stat.gamesPlayed
-                    + " games : avg. place : " + stat.averagePlace()
-                    + ", avg. points : " + stat.averagePoints());
-        }
+        if (gamesPlayed > 1)
+            printStats(stats);
     }
 
     public static List<Strategy> createStrategies() {
@@ -108,10 +106,8 @@ public class App {
         return strategies;
     }
 
-    public static List<Result> playGame(List<Player> players, Deck deck, List<Card> discardPile, int gamesPlayed) {
+    public static List<Result> playGame(List<Player> players, Deck deck, List<Card> discardPile) {
         IntStream.range(0, 4).forEachOrdered(i -> {
-            if (gamesPlayed == 1)
-                System.out.println("----------------- Turn " + (i + 1) + " -----------------");
             Utils.phase1(players, deck);
             Utils.phase2(players, deck, discardPile);
             Utils.phase3(players);
@@ -127,5 +123,13 @@ public class App {
             System.out.println("Player " + result.getPlayerId() + " has "
                     + result.getPlayerPoint() + " points and "
                     + result.getPlayerGold() + " golds");
+    }
+
+    public static void printStats(List<Stat> stats) {
+        for (Stat stat : stats) {
+            System.out.println("Player " + stat.getPlayerId() + " has played " + gamesPlayed
+                    + " games : avg. place : " + stat.averagePlace()
+                    + ", avg. points : " + stat.averagePoints());
+        }
     }
 }

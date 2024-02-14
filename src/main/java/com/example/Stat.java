@@ -7,11 +7,9 @@ public class Stat {
     int playerId;
     List<Integer> playerPlaces;
     List<Integer> playerPoints;
-    int gamesPlayed;
 
     public Stat(int playerId) {
         this.playerId = playerId;
-        this.gamesPlayed = 0;
         this.playerPlaces = new ArrayList<Integer>();
         this.playerPoints = new ArrayList<Integer>();
     }
@@ -23,7 +21,6 @@ public class Stat {
     public void addGame(int place, int points) {
         this.playerPlaces.add(place);
         this.playerPoints.add(points);
-        this.gamesPlayed++;
     }
 
     public float averagePlace() {

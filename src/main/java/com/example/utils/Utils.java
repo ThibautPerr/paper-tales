@@ -88,8 +88,10 @@ public abstract class Utils {
     }
 
     public static void phase1(List<Player> players, Deck deck) {
-        if (LOG_START_PHASE_1)
-            System.out.println("\n--------------- Start phase1 ---------------");
+        if (LOG_START_PHASE_1) {
+            System.out.println("\n--------------- NEW TURN ---------------");
+            System.out.println("--------------- Start phase1 ---------------");
+        }
 
         // Each player draws 5 cards
         List<List<Card>> cardsSet = new ArrayList<>();
@@ -342,8 +344,10 @@ public abstract class Utils {
                 player.getBoard().printBoard();
             }
         }
-        if (LOG_END_PHASE_6)
+        if (LOG_END_PHASE_6) {
             System.out.println("--------------- End phase6 ---------------");
+            System.out.println("---------------- END TURN ----------------");
+        }
     }
 
     // Trigger end game effects
