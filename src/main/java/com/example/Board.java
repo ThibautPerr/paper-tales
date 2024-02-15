@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import com.example.effects.OnUpdate;
+
 public class Board {
     private List<Card> frontCards;
     private List<Card> backCards;
@@ -47,6 +49,39 @@ public class Board {
 
     public void addBackCard(Card card) {
         this.backCards.add(card);
+    }
+
+    public void moveFrontCardToBack(Card card, Player player) {
+        if (this.frontCards.contains(card)) {
+            this.frontCards.remove(card);
+            card.getEffects().stream()
+                    .filter(effect -> effect instanceof OnUpdate
+                            && ((OnUpdate) effect).getFunction().equals("removeResourceIfFrontUnit"))
+                    .forEach(effect -> ((OnUpdate) effect).removeResourceIfFrontUnit(player));
+            this.backCards.add(card);
+        }
+    }
+
+    public void moveBackCardToFront(Card card, Player player) {
+        if (this.backCards.contains(card)) {
+            this.backCards.remove(card);
+            card.getEffects().stream()
+                    .filter(effect -> effect instanceof OnUpdate
+                            && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit"))
+                    .forEach(effect -> ((OnUpdate) effect).addResourceIfFrontUnit(player));
+            this.frontCards.add(card);
+        }
+    }
+
+    public void exchangeCards(Card frontCard, Card backCard) {
+        if (frontCard == null || backCard == null)
+            return;
+        else {
+            this.frontCards.remove(frontCard);
+            this.backCards.remove(backCard);
+            this.frontCards.add(backCard);
+            this.backCards.add(frontCard);
+        }
     }
 
     public void removeCardById(int idCard) {

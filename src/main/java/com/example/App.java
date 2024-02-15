@@ -13,7 +13,7 @@ import com.example.strategy.chooseCard.NaiveChooseCard;
 import com.example.strategy.chooseCard.SmartChooseCard;
 import com.example.strategy.keepCard.KeepStrongestCard;
 import com.example.strategy.keepCard.NaiveKeepCard;
-import com.example.strategy.boardReorganisation.DiscardAllBoardReorganisation;
+import com.example.strategy.boardReorganisation.SmartBoardReorganisation;
 import com.example.strategy.pickCard.NaivePickCard;
 import com.example.strategy.playCard.NaivePlayCard;
 import com.example.strategy.playCard.PlayStrongCard;
@@ -76,9 +76,17 @@ public class App {
                 new NaiveBoardReorganisation(),
                 new NaivePlayCard(),
                 new NaiveKeepCard(),
-                new NaiveBuild(),
+                new RandomBuild(),
                 new NaiveChooseCard()));
-        // ?
+        // Smart strategy keeping board
+        strategies.add(new Strategy(
+                new NaivePickCard(),
+                new SmartBoardReorganisation(),
+                new PlayStrongCard(),
+                new KeepStrongestCard(),
+                new RandomBuild(),
+                new SmartChooseCard()));
+        // Naive Strategy
         strategies.add(new Strategy(
                 new NaivePickCard(),
                 new NaiveBoardReorganisation(),
@@ -86,18 +94,10 @@ public class App {
                 new NaiveKeepCard(),
                 new RandomBuild(),
                 new SmartChooseCard()));
-        // Smart strategy keeping board
-        strategies.add(new Strategy(
-                new NaivePickCard(),
-                new NaiveBoardReorganisation(),
-                new PlayStrongCard(),
-                new KeepStrongestCard(),
-                new RandomBuild(),
-                new SmartChooseCard()));
         // Smart strategy discarding board
         strategies.add(new Strategy(
                 new NaivePickCard(),
-                new DiscardAllBoardReorganisation(),
+                new SmartBoardReorganisation(),
                 new PlayStrongCard(),
                 new KeepStrongestCard(),
                 new RandomBuild(),

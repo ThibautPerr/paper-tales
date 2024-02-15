@@ -1,7 +1,6 @@
 package com.example;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.example.effects.Effect;
 
@@ -115,7 +114,7 @@ public class Card {
     }
 
     public static List<Card> deepCopyCards(List<Card> cards) {
-        return cards.stream().map(Card::new).collect(Collectors.toList());
+        return cards.stream().map(Card::new).toList();
     }
 
     public void printCard() {

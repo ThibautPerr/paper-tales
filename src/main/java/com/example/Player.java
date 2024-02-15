@@ -2,7 +2,6 @@ package com.example;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.example.Resource.ResourceType;
 import com.example.effects.Effect;
@@ -342,7 +341,7 @@ public class Player {
 
     public void addMoonToAllOtherUnits(int moon, int idCard) {
         List<Card> cards = this.board.getCards().stream().filter(card -> card.getId() != idCard)
-                .collect(Collectors.toList());
+                .toList();
         if (cards.size() > 0)
             for (Card card : cards)
                 addMoon(card.getId(), moon);
@@ -626,32 +625,8 @@ public class Player {
     }
 
     public List<Card> findCardsWithAddResourceIfFrontUnit(List<Card> cards) {
-        List<Card> cardsWithAddResourceIfFrontUnit = new ArrayList<Card>();
-        for (Card card : cards) {
-            if (card.getEffects().stream().anyMatch(effect -> effect instanceof OnUpdate
-                    && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit")))
-                cardsWithAddResourceIfFrontUnit.add(card);
-        }
-        return cardsWithAddResourceIfFrontUnit;
-    }
-
-    public void playCardsWithAddResourceIfFrontUnit(List<Card> cards) {
-        if (cards.size() > 0)
-            for (Card card : cards)
-                if (card.isMoved()) {
-                    if (this.board.isPresentFrontCard(card.getId())) {
-                        for (Effect effect : card.getEffects())
-                            if (effect instanceof OnUpdate
-                                    && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit"))
-                                ((OnUpdate) effect).addResourceIfFrontUnit(this);
-                    } else {
-                        if (this.board.isPresentBackCard(card.getId()))
-                            for (Effect effect : card.getEffects())
-                                if (effect instanceof OnUpdate
-                                        && ((OnUpdate) effect).getFunction().equals("removeResourceIfFrontUnit"))
-                                    ((OnUpdate) effect).removeResourceIfFrontUnit(this);
-                    }
-                }
+        return cards.stream().filter(card -> card.getEffects().stream().anyMatch(effect -> effect instanceof OnUpdate
+                && ((OnUpdate) effect).getFunction().equals("addResourceIfFrontUnit"))).toList();
     }
 
     public void discardCardsWithAddResourceIfFrontUnit(List<Card> cards) {

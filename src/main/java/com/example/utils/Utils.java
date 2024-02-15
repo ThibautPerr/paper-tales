@@ -142,6 +142,7 @@ public abstract class Utils {
         }
 
         for (Player player : players) {
+            player.getBoard().getCards().stream().forEach(card -> card.setMoved(false));
             player.playPhase2Effects();
             boardReorganisation(player);
             playCards(player, deck);
@@ -165,10 +166,7 @@ public abstract class Utils {
     }
 
     public static void boardReorganisation(Player player) {
-        List<Card> cards = player
-                .findCardsWithAddResourceIfFrontUnit(player.getBoard().getCards());
         player.getStrategy().boardReorganisation(player);
-        player.playCardsWithAddResourceIfFrontUnit(cards);
     }
 
     public static void playCards(Player player, Deck deck) {
@@ -365,11 +363,11 @@ public abstract class Utils {
         List<Result> results = players.stream()
                 .map(player -> new Result(player.getId(), player.getPoint(),
                         player.getResourceByResourceType(ResourceType.GOLD).getQuantity()))
-                .sorted(Comparator.comparing(Result::getPlayerPoint)
+                .sorted(Comparator.comparing(Result::getPlayerPoint).reversed()
                         .thenComparing(Result::getPlayerGold))
                 .toList();
 
-        results.stream().forEachOrdered(result -> result.setPlayerPlace(results.size() - results.indexOf(result)));
+        results.stream().forEachOrdered(result -> result.setPlayerPlace(results.indexOf(result) + 1));
 
         return results;
     }
